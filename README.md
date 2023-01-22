@@ -5,6 +5,9 @@ To make this all possible; Full Disk Encryption simply can't work. We will be pa
 
 If you have any other custom partitions which SteamOS does not rely on to run, you can encrypt those as well.
 
+# Warning
+None of this is official. I am **not** a developer for Valve. The method used here is very hacky and may not work in future SteamOS releases.
+
 # Prerequisites
 * A USB-C hub with USB ports which works in the Steam Deck, preferably with power pass-through support so that you can charge the deck as well (encryption takes a while)
 * A USB flash drive with a Linux Installer on it
