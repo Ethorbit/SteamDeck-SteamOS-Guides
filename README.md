@@ -17,16 +17,31 @@ I'm not responsible for any damage or data loss.
 * A USB-C hub with USB ports which work in the Steam Deck, preferably with power pass-through support so that you can charge the deck as well (securely wiping disks takes a long time)
 * A USB flash drive with a Linux install(er) on it like [this](https://archlinux.org/download/), so you can access the SteamOS partitions from outside
 
-(While you theoretically could just do everything inside SteamOS; having an installer and hub will ensure that if a fuckup happens, you'll have full ability to restore the deck back to a working state.)
+(While you technically could just do everything inside SteamOS; having an installer and hub will ensure that if a fuckup happens which prevents booting, you'll have full ability to restore the deck back to a working state. It will also ensure that SteamOS will not get in your way during encryption.)
 
 ![Example](https://i.imgur.com/W7EdVYn.png)
 
-## Booting into external Operating System
+# Enabling TPM and dm_crypt
+
+For some reason, Valve has intentionally disabled TPM and dm_crypt. These are needed for encryption.
+
+* Press the Steam button > Power and Switch to Desktop. 
+* Find and open Konsole. 
+
+If you haven't already setup a password: type `passwd` to do so.
+
+Enter these commands:
+* `echo "dm_crypt" | sudo tee /etc/modules-load.d/dm_crypt.conf`
+* `sudo sed -i "s/module_blacklist=tpm//" /etc/default/grub`
+* `sudo update-grub`
+
+# Booting into a Linux installer
+Despite its name, we are not actually going to be "installing" anything; we just need a separate temporary Linux environment to use while we manage and encrypt partitions. We are doing it this way to simply avoid any file conflicts. My flash drive has Ventoy with an Arch Linux Installer .iso on it, so I will be booting from that.
+
 With the Deck powered off and usb devices plugged in, hold the Volume Down and Power button at the same time to reach the boot menu. Select the Flash drive
 
 [![Video Tutorial](https://i.imgur.com/6VH6ZiY.jpg)](https://www.youtube.com/watch?v=2_Pkv4tr8Ho)
 
-From here on out, everything will be done in the terminal.
 
 # Partitioning
 To identify storage devices, use lsblk.
@@ -63,7 +78,7 @@ Note: *If you make a mistake in fdisk, Ctrl + C will exit without changes as lon
 
 ### SD card
 * `fdisk /dev/mmcblk0`
-* Enter d and press enter until there are no more partitions left.
+* Enter d and press enter and repeat until there are no more partitions left.
 * Enter g to create a new GPT label
 * Enter n to create a new partition
 * Press enter until it stops asking (this means we're allocating the entire SD card with a single partition, if you're okay with that.)
@@ -122,15 +137,15 @@ For me, 8 has 45G and 9 has 2G. Perfect!
 * Enter w to write changes
   
 # Encrypting
-For me, /dev/mmcblk0p1 and /dev/nvme0n1p8 are the two partitions that need to be encrypted.
+My /dev/mmcblk0p1 and /dev/nvme0n1p8 are the two partitions that need to be encrypted.
   
-![warning-icon](https://i.imgur.com/ZWdfbEN.png) Make sure you double check that the partitions you are about to encrypt are the ones you created, these next actions has the potential to bork your whole SteamOS install (if passed the wrong partition.)
+![warning-icon](https://i.imgur.com/ZWdfbEN.png) Make sure you double check that the partitions you are about to encrypt are the ones **you** created, these next actions have the potential to bork your whole SteamOS install (if passed the wrong partition(s).)
 
 We will use cryptsetup luksFormat to setup encryption for them. 
 * `cryptsetup luksFormat /dev/mmcblk0p1`
 * `cryptsetup luksFormat /dev/nvme0n1p8`
 
-It will ask you to confirm YES and then to enter a secure, memorable password. If you forget this password, you're screwed. Keep backups.
+It will ask you to confirm YES and then to enter a secure, memorable password. If you forget this password, you're screwed. Keep backups of important files.
   
 Next we will open them
 * `cryptsetup luksOpen /dev/mmcblk0p1 crypt_sdcard`
@@ -145,3 +160,61 @@ The next thing we will do is securely wipe them. **This is a process that will t
   
 Normally, this operation would allocate the entire disk with zeroes, but since all writes to these devices are encrypted, these zeroes will also be encrypted. This makes it way harder for attackers to figure out which parts of the encrypted disks actually contain user data.
   
+# Mounting SteamOS /var partition
+
+So SteamOS's /etc has two directories merged. One read-only and the other read-write, the writable directory is actually stored on the /var partition's lib/overlayfs/etc/. We need to mount the SteamOS /var partition, so we can make changes to /etc.
+ 
+```
+root@archiso ~ # lsblk     
+NAME           MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+loop0            7:0    0 689.8M  1 loop  /run/archiso/airootfs
+sda              8:0    1     0B  0 disk  
+sdb              8:16   1  57.8G  0 disk  
+├─sdb1           8:17   1  57.7G  0 part  
+│ └─ventoy     254:0    0 795.3M  1 dm    /run/archiso/bootmnt
+└─sdb2           8:18   1    32M  0 part  
+mmcblk0        179:0    0 477.5G  0 disk  
+└─mmcblk0p1    179:1    0 477.5G  0 part  
+nvme0n1        259:0    0  57.6G  0 disk  
+├─nvme0n1p1    259:9    0    64M  0 part  
+├─nvme0n1p2    259:10   0    32M  0 part  
+├─nvme0n1p3    259:11   0    32M  0 part  
+├─nvme0n1p4    259:12   0     5G  0 part  
+├─nvme0n1p5    259:13   0     5G  0 part  
+├─nvme0n1p6    259:14   0   256M  0 part  
+├─nvme0n1p7    259:15   0   256M  0 part  
+├─nvme0n1p8    259:16   0    45G  0 part  
+│ └─crypt_home 254:1    0    45G  0 crypt 
+└─nvme0n1p9    259:17   0     2G  0 part    
+```  
+  
+As you can see, there are are two SteamOS nvme partitions of size 256M, you want to mount the first one.
+  
+`mount /dev/nvme0n1p6 /mnt`
+  
+with ls, you can check if the /mnt mount contains the right files:
+```
+root@archiso ~ # ls -lah /mnt
+total 28K
+drwxr-xr-x 17 root root  1.0K Jan 22 01:08 .
+drwxr-xr-x  1 root root   100 Jan 22 05:21 ..
+-rw-r--r--  1 root root   208 Dec 28 23:53 .updated
+drwxr-xr-x  7 root root  1.0K Jan 10 19:03 cache
+drwx--x--x  3 root root  1.0K Jan 15 19:12 db
+drwxr-xr-x  2 root root  1.0K Jan 10 17:08 empty
+drwxrwxr-x  2 root games 1.0K Jan 10 17:08 games
+drwxr-xr-x 24 root root  1.0K Jan 10 19:03 lib
+drwxr-xr-x  2 root root  1.0K Jan 10 17:08 local
+lrwxrwxrwx  1 root root    11 Jan 10 17:08 lock -> ../run/lock
+drwxr-xr-x  2 root root  1.0K Jan 10 17:08 log
+drwx------  2 root root   12K Jan 10 17:19 lost+found
+lrwxrwxrwx  1 root root    10 Jan 10 17:08 mail -> spool/mail
+drwxr-xr-x  6 root root  1.0K Jan 21 13:21 mnt
+drwxr-xr-x  2 root root  1.0K Jan 10 17:08 opt
+lrwxrwxrwx  1 root root     6 Jan 10 17:08 run -> ../run
+drwxr-xr-x  3 root root  1.0K Jan 10 17:08 spool
+drwxrwxrwt  2 root root  1.0K Jan 10 17:10 tmp
+drwxr-xr-x  4 root root  1.0K Jan 21 07:31 usr
+```
+ 
+# Adding disks to crypttab and fstab
