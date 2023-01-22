@@ -11,7 +11,7 @@ If you have any other custom partitions which SteamOS does not rely on to run, y
 I'm not responsible for any damage or data loss.
 
 # Prerequisites
-* A **complete backup of all data stored on your SD card, system /home/ directory and anything else you decide to encrypt.** It's all getting erased.
+* A **complete backup of all data from your SD card, system /home/ directory and anything else you decide to encrypt, stored on another device.** It's all getting erased.
 * A Throwaway Steam account which will only be used to decrypt the disks (this is for best SteamOS compatibility, trust me)
 
 * A USB-C hub with USB ports which work in the Steam Deck, preferably with power pass-through support so that you can charge the deck as well (securely wiping disks takes a long time)
@@ -160,11 +160,17 @@ The next thing we will do is securely wipe them. **This is a process that will t
   
 Normally, this operation would allocate the entire disk with zeroes, but since all writes to these devices are encrypted, these zeroes will also be encrypted. This makes it way harder for attackers to figure out which parts of the encrypted disks actually contain user data.
   
-# Make filesystems for encrypted disks
+# Make filesystems
 
-With your encrypted disks decrypted, use `mkfs` to make a filesystem for them, so that you can actually mount and write to them later.
+Use `mkfs` to make a filesystem for the partitions you created, so that you can actually mount and write to them later.
 
-I will be using the Btrfs filesystem since it supports transparent compression, subvolumes, snapshotting, and more. The compression specifically is useful because it will help save space with no effort.
+I will be using the Btrfs filesystem since it supports transparent compression, subvolumes, snapshotting, and more. The compression specifically is useful, because it will help save space with no effort.
+
+The unencrypted home
+
+* `mkfs.btrfs /dev/nvme0n1p9`
+
+The decrypted devices
 
 * `mkfs.btrfs /dev/mapper/crypt_sdcard`
 * `mkfs.btrfs /dev/mapper/crypt_home`
