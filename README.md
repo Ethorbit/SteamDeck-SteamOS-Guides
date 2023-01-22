@@ -200,7 +200,7 @@ nvme0n1                       57.6G
 └─nvme0n1p9                      2G
 ```  
   
-As you can see, there are are two SteamOS nvme partitions with the label 'var' and size of 256M: mount the first one.
+As you can see, there are are two SteamOS partitions with the label 'var' and size of 256M: mount the first one.
   
 `mount /dev/nvme0n1p6 /mnt`
   
@@ -285,3 +285,6 @@ UUID="80c91f87-2164-4286-8c2e-6d317849b262"    /mnt/sdcard     btrfs   defaults,
 (We added nofail and noauto so it won't block booting)
   
 Create the sdcard's mount directory: `mkdir /mnt/mnt/sdcard`
+
+# Create custom binaries directories
+Because SteamOS for the most part is immutable, we will create our own custom directories for binaries on the /var partition, since we know files on /var will not get overriden by updates.
