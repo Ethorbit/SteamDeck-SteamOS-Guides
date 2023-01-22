@@ -176,32 +176,33 @@ Note: SteamOS by default uses the ext4 filesystem (which is stable and fast), bu
 So SteamOS's /var directory is **very** different than what you'd normally expect from a typical distro. Most of SteamOS runs on an immutable filesystem which is overriden each update, so the /var directory was repurposed to just be "the place" for the user to modify some parts of the system at. Because of this, we will be making pretty much all file changes on /var.
  
 ```
-root@archiso ~ # lsblk     
-NAME           MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
-loop0            7:0    0 689.8M  1 loop  /run/archiso/airootfs
-sda              8:0    1     0B  0 disk  
-sdb              8:16   1  57.8G  0 disk  
-├─sdb1           8:17   1  57.7G  0 part  
-│ └─ventoy     254:0    0 795.3M  1 dm    /run/archiso/bootmnt
-└─sdb2           8:18   1    32M  0 part  
-mmcblk0        179:0    0 477.5G  0 disk  
-└─mmcblk0p1    179:1    0 477.5G  0 part  
-nvme0n1        259:0    0  57.6G  0 disk  
-├─nvme0n1p1    259:9    0    64M  0 part  
-├─nvme0n1p2    259:10   0    32M  0 part  
-├─nvme0n1p3    259:11   0    32M  0 part  
-├─nvme0n1p4    259:12   0     5G  0 part  
-├─nvme0n1p5    259:13   0     5G  0 part  
-├─nvme0n1p6    259:14   0   256M  0 part  
-├─nvme0n1p7    259:15   0   256M  0 part  
-├─nvme0n1p8    259:16   0    45G  0 part  
-│ └─crypt_home 254:1    0    45G  0 crypt 
-└─nvme0n1p9    259:17   0     2G  0 part    
+root@archiso ~ # lsblk -o name,label,size
+NAME             LABEL         SIZE
+loop0                        689.8M
+sda                              0B
+sdb                           57.8G
+├─sdb1           Ventoy       57.7G
+│ └─ventoy       ARCH_202207 795.3M
+└─sdb2           VTOYEFI        32M
+mmcblk0                      477.5G
+└─mmcblk0p1      sdcard      477.5G
+  └─crypt_sdcard             477.5G
+nvme0n1                       57.6G
+├─nvme0n1p1      esp            64M
+├─nvme0n1p2      efi            32M
+├─nvme0n1p3      efi            32M
+├─nvme0n1p4      rootfs          5G
+├─nvme0n1p5      rootfs          5G
+├─nvme0n1p6      var           256M
+├─nvme0n1p7      var           256M
+├─nvme0n1p8                     45G
+│ └─crypt_home                  45G
+└─nvme0n1p9                      2G
 ```  
   
-As you can see, there are are two SteamOS nvme partitions with the size of 256M, you want to mount the first one.
+As you can see, there are are two SteamOS nvme partitions with the label 'var' and size of 256M: mount the first one.
   
-Enter: `mount /dev/nvme0n1p6 /mnt`
+`mount /dev/nvme0n1p6 /mnt`
   
 with ls, you can check if the /mnt mount contains the right files:
 ```
@@ -234,9 +235,9 @@ The cryptsetup service checks for disks in crypttab, we can invoke this service 
   
 If we add the decrypted partition paths to fstab, we can automatically mount them after decryption.
   
-Instead of referencing the device names, we will be using their UUIDs. You can view the UUID of every disk by entering: `lsblk -o NAME,LABEL,SIZE,FSTYPE,TYPE,UUID`
+Instead of referencing the device names, we will be using their UUIDs. You can view the UUID of every disk by entering: `lsblk -o name,label,size,fstype,type,uuid`
 ```
-root@archiso ~ # lsblk -o NAME,LABEL,SIZE,FSTYPE,TYPE,UUID
+root@archiso ~ # lsblk -o name,label,size,fstype,type,uuid
 NAME             LABEL         SIZE FSTYPE      TYPE  UUID
 loop0                        689.8M squashfs    loop  
 sda                              0B             disk  
