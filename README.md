@@ -162,7 +162,7 @@ Normally, this operation would allocate the entire disk with zeroes, but since a
   
 # Mounting SteamOS /var partition
 
-So SteamOS's /etc has two directories merged. One read-only and the other read-write, the writable directory is actually stored on the /var partition's lib/overlayfs/etc/. We need to mount the SteamOS /var partition, so we can make changes to /etc.
+So SteamOS's /etc has two directories' contents merged - one of them is read-only and the other is read-write and located on the var partition's lib/overlays/etc/upper/. Therefore, in order to make changes to the /etc directory, we need to first mount the SteamOS /var partition.
  
 ```
 root@archiso ~ # lsblk     
@@ -188,7 +188,7 @@ nvme0n1        259:0    0  57.6G  0 disk
 └─nvme0n1p9    259:17   0     2G  0 part    
 ```  
   
-As you can see, there are are two SteamOS nvme partitions of size 256M, you want to mount the first one.
+As you can see, there are are two SteamOS nvme partitions with the size of 256M, you want to mount the first one.
   
 `mount /dev/nvme0n1p6 /mnt`
   
