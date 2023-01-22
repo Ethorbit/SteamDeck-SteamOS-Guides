@@ -9,7 +9,7 @@ If you have any other custom partitions which SteamOS does not rely on to run, y
 * A USB-C hub with USB ports which works in the Steam Deck, preferably with power pass-through support so that you can charge the deck as well (encryption takes a while)
 * A USB flash drive with a Linux Installer on it
 
-(While you theoretically could just use an SSH server instead, connect to it from another device, logout of the deck user and unmount the SD card and home partitions; having an installer and hub will ensure that if a fuckup happens, you'll have full ability to restore the deck back to a working state. Locking yourself out of your own deck is not fun.)
+(While you theoretically could just use an SSH server instead; having an installer and hub will ensure that if a fuckup happens, you'll have full ability to restore the deck back to a working state. Locking yourself out of your own deck is not fun.)
 
 * Partition for SD card which will be used for encryption
 * Partition for home which will be used for encryption
