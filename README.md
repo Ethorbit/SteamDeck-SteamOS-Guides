@@ -101,9 +101,9 @@ Here in my case, we can see the Type "Linux Home" is partition # 8 (the largest 
 * `fdisk /dev/nvme0n1` 
 * Enter d and then enter the # of the home partition
 * Enter n, press enter twice until it asks for "Last Sector"
-* For Last Sector, I will enter `-2G`. -2G means I'm leaving 2 gigabytes of space.
-* Press Y to remove the signature if it asks
-* Enter n and press enter until it stops asking. This will be unencrypted home which only needs enough space for a Steam install. You can give it more if you want in case of Steam updates adding up, but as you can see, I have the 64GB model so I'm pretty limited.
+* For Last Sector, I will enter `-2G`. -2G means I'm leaving 2 gigabytes of space for the unencrypted partition we'll create next, which will only need enough for a Steam install. You can reduce it by more if you think it might require more space in the future.
+* Enter Y to remove the signature (if it asks)
+* Enter n and press enter until it stops asking. This will be unencrypted home.
 * Enter p to check if your partitions look good. 
 ```
   Device             Start       End  Sectors  Size Type
@@ -121,4 +121,22 @@ Here in my case, we can see the Type "Linux Home" is partition # 8 (the largest 
 For me, 8 has 45G and 9 has 2G. Perfect!
 * Enter w to write changes
   
-## Encrypting
+# Encrypting
+For me, /dev/mmcblk0p1 and /dev/nvme0n1p8 are the two partitions that need to be encrypted.
+  
+![warning-icon](https://i.imgur.com/ZWdfbEN.png) Make sure you double check that the partitions you are about to encrypt are the ones you created, this next action has the possibility to bork your SteamOS install if given the incorrect partition #.
+
+We will use cryptsetup luksFormat to setup encryption for them. 
+* `cryptsetup luksFormat /dev/mmcblk0p1`
+* `cryptsetup luksFormat /dev/nvme0n1p8`
+
+It will ask you to confirm YES and then to enter a secure, memorable password.
+  
+Next we will open them (we should never access those devices directly anymore as they are now encrypted)
+* `cryptsetup luksOpen /dev/mmcblk0p1 crypt_sdcard`
+* `cryptsetup luksOpen /dev/nvme0n1p8 crypt_home`
+
+After opening, the decrypted devices are located at /dev/mapper/crypt_sdcard and /dev/mapper/crypt_home.
+  
+
+  
