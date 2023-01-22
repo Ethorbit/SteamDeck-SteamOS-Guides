@@ -6,7 +6,7 @@ To make this all possible; Full Disk Encryption simply can't work. We will be pa
 If you have any other custom partitions which SteamOS does not rely on to run, you can encrypt those as well.
 
 ## Warning
-**None of this is official**. I am not a developer for Valve. The method used here is very hacky and may not work in future SteamOS releases. 
+**None of this is official**. I am not a developer for Valve. The method used here is very hacky, intended only for SteamOS and may not work in future OS releases. 
 
 I'm not responsible for any damage or data loss.
 
