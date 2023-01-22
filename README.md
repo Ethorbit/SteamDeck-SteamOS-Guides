@@ -173,7 +173,7 @@ Note: SteamOS by default uses the ext4 filesystem (which is stable and fast), bu
   
 # Mounting SteamOS /var partition
 
-So SteamOS's /etc has two directories' contents merged - one of them is read-only and the other is read-write and located on the var partition's lib/overlays/etc/upper/. Therefore, in order to make changes to the /etc directory, we need to first mount the SteamOS /var partition.
+So SteamOS's /var directory is **very** different than what you'd normally expect from a typical distro. Most of SteamOS runs on an immutable filesystem which is overriden each update, so the /var directory was repurposed to just be "the place" for the user to modify some parts of the system at. Because of this, we will be making pretty much all file changes on /var.
  
 ```
 root@archiso ~ # lsblk     
