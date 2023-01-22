@@ -54,7 +54,7 @@ nvme0n1     259:0    0  57.6G  0 disk
 └─nvme0n1p8 259:8    0    47G  0 part 
 ```
 
-Here, nvme0n1 is the Steam Deck's internal storage and mmcblk0 is the SD card.
+Here, *nvme0n1* is the Steam Deck's internal storage and *mmcblk0* is the SD card.
 Your numbers *may* be different, so keep an eye on that.
 
 We will use fdisk <disk name, not partition name> (in my case that would be /dev/nvme0n1 or /dev/mmcblk0)
@@ -100,12 +100,25 @@ Here in my case, we can see the Type "Linux Home" is partition # 8 (the largest 
   
 * `fdisk /dev/nvme0n1` 
 * Enter d and then enter the # of the home partition
-* 
-
-# T 
+* Enter n, press enter twice until it asks for "Last Sector"
+* For Last Sector, I will enter `-2G`. -2G means I'm leaving 2 gigabytes of space.
+* Press Y to remove the signature if it asks
+* Enter n and press enter until it stops asking. This will be unencrypted home which only needs enough space for a Steam install. You can give it more if you want in case of Steam updates adding up, but as you can see, I have the 64GB model so I'm pretty limited.
+* Enter p to check if your partitions look good. 
+```
+  Device             Start       End  Sectors  Size Type
+/dev/nvme0n1p1      2048    133119   131072   64M EFI System
+/dev/nvme0n1p2    133120    198655    65536   32M Microsoft basic data
+/dev/nvme0n1p3    198656    264191    65536   32M Microsoft basic data
+/dev/nvme0n1p4    264192  10749951 10485760    5G Linux root (x86-64)
+/dev/nvme0n1p5  10749952  21235711 10485760    5G Linux root (x86-64)
+/dev/nvme0n1p6  21235712  21759999   524288  256M Linux variable data
+/dev/nvme0n1p7  21760000  22284287   524288  256M Linux variable data
+/dev/nvme0n1p8  22284288 116637695 94353408   45G Linux filesystem
+/dev/nvme0n1p9 116637696 120829951  4192256    2G Linux filesystem
+```
   
-* Partition for SD card which will be used for encryption
-* Partition for home which will be used for encryption
-* Another partition for home which will **not** be encrypted (this partition will only be used for decryption, so only give it space for a Steam user install - like 2GB)
-
+For me, 8 has 45G and 9 has 2G. Perfect!
+* Enter w to write changes
+  
 ## Encrypting
