@@ -15,4 +15,4 @@ If you have any other custom partitions which SteamOS does not rely on to run, y
 * Partition for home which will be used for encryption
 * Another partition for home which will **not** be encrypted (this partition will only be used for decryption, so only give it space for a Steam user install - like 2GB)
 * **A complete backup of all the mentioned partitions stored on a different device** since they **will get erased**
-* A Throwaway Steam account for the unencrypted home Steam install (this is for best compatibility, trust me)
+* A Throwaway Steam account for the unencrypted home (this is for best SteamOS compatibility, trust me)
