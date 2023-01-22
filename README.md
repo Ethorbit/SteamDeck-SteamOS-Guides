@@ -124,19 +124,24 @@ For me, 8 has 45G and 9 has 2G. Perfect!
 # Encrypting
 For me, /dev/mmcblk0p1 and /dev/nvme0n1p8 are the two partitions that need to be encrypted.
   
-![warning-icon](https://i.imgur.com/ZWdfbEN.png) Make sure you double check that the partitions you are about to encrypt are the ones you created, this next action has the possibility to bork your SteamOS install if given the incorrect partition #.
+![warning-icon](https://i.imgur.com/ZWdfbEN.png) Make sure you double check that the partitions you are about to encrypt are the ones you created, these next actions has the potential to bork your whole SteamOS install (if passed the wrong partition.)
 
 We will use cryptsetup luksFormat to setup encryption for them. 
 * `cryptsetup luksFormat /dev/mmcblk0p1`
 * `cryptsetup luksFormat /dev/nvme0n1p8`
 
-It will ask you to confirm YES and then to enter a secure, memorable password.
+It will ask you to confirm YES and then to enter a secure, memorable password. If you forget this password, you're screwed. Keep backups.
   
-Next we will open them (we should never access those devices directly anymore as they are now encrypted)
+Next we will open them
 * `cryptsetup luksOpen /dev/mmcblk0p1 crypt_sdcard`
 * `cryptsetup luksOpen /dev/nvme0n1p8 crypt_home`
 
-After opening, the decrypted devices are located at /dev/mapper/crypt_sdcard and /dev/mapper/crypt_home.
+We should never use them directly as they are now encrypted. The decrypted (opened) devices are located at /dev/mapper/crypt_sdcard and /dev/mapper/crypt_home.
   
+The next thing we will do is securely wipe them. **This is a process that will take a long time to complete**, especially with the slower SD card - which is why you should be charging your deck by now.
 
+* `dd if=/dev/zero of=/dev/mapper/crypt_sdcard bs=1M status=progress`
+* `dd if=/dev/zero of=/dev/mapper/crypt_home bs=1M status=progress`
+  
+Normally, this operation would allocate the entire disk with zeroes, but since all writes to these devices are encrypted, these zeroes will also be encrypted. This makes it way harder for attackers to figure out which parts of the encrypted disks actually contain user data.
   
