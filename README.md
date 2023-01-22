@@ -190,7 +190,7 @@ nvme0n1        259:0    0  57.6G  0 disk
   
 As you can see, there are are two SteamOS nvme partitions with the size of 256M, you want to mount the first one.
   
-`mount /dev/nvme0n1p6 /mnt`
+Enter: `mount /dev/nvme0n1p6 /mnt`
   
 with ls, you can check if the /mnt mount contains the right files:
 ```
@@ -218,3 +218,45 @@ drwxr-xr-x  4 root root  1.0K Jan 21 07:31 usr
 ```
  
 # Adding disks to crypttab and fstab
+
+The cryptsetup service checks for disks in crypttab, we can invoke this service later to get a handy passphrase prompt for all disks to decrypt. The cryptsetup service caches passphrases, so if multiple disks have the same one, you only need to enter it once. 
+  
+If we add the decrypted partition paths to fstab, we can automatically mount them after decryption.
+  
+Instead of referencing the device names, we will be using their UUIDs. You can view the UUID of every disk by entering: `lsblk -o NAME,LABEL,SIZE,FSTYPE,TYPE,UUID`
+```
+root@archiso ~ # lsblk -o NAME,LABEL,SIZE,FSTYPE,TYPE,UUID
+NAME           LABEL         SIZE FSTYPE      TYPE  UUID
+loop0                      689.8M squashfs    loop  
+sda                            0B             disk  
+sdb                         57.8G             disk  
+├─sdb1         Ventoy       57.7G exfat       part  8623-8A3A
+│ └─ventoy     ARCH_202207 795.3M iso9660     dm    2022-07-01-13-20-00-00
+└─sdb2         VTOYEFI        32M vfat        part  5A89-BA75
+mmcblk0                    477.5G             disk  
+└─mmcblk0p1    sdcard      477.5G crypto_LUKS part  c29abde6-8237-410e-a338-f808ff065c99
+nvme0n1                     57.6G             disk  
+├─nvme0n1p1    esp            64M vfat        part  89B1-076D
+├─nvme0n1p2    efi            32M vfat        part  89B1-BC90
+├─nvme0n1p3    efi            32M vfat        part  89B2-685B
+├─nvme0n1p4    rootfs          5G btrfs       part  1fae9051-7984-45be-9600-865a94ad8808
+├─nvme0n1p5    rootfs          5G btrfs       part  4a39a236-7977-4eb7-8ea1-2a9c41ff7fee
+├─nvme0n1p6    var           256M ext4        part  c6e05ac9-5103-4808-9b5f-0d3de52a16e6
+├─nvme0n1p7    var           256M ext4        part  1041ad1e-13e1-4f86-ac15-fee153092189
+├─nvme0n1p8                   45G crypto_LUKS part  b27f07a2-f2be-49b1-b769-c67d9ab2eb98
+│ └─crypt_home                45G             crypt 
+└─nvme0n1p9                    2G             part  
+```
+ 
+As you can see, the partitions we encrypted appear with the type "crypto_LUKS"
+My encryption partitions have the UUIDs `c29abde6-8237-410e-a338-f808ff065c99` and `b27f07a2-f2be-49b1-b769-c67d9ab2eb98`
+  
+Edit crypttab: `sudo nano /mnt/lib/overlays/etc/upper/crypttab`
+```
+crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,_netdev,nofail 
+crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,_netdev,nofail
+```
+  
+Note: if you want to add trim support for the nvme, add: `,discard` after nofail. While this will give better performance, it will also make the encryption less effective. Given the fact that my nvme is too small to run games and mostly just runs the OS (which does not require crazy read/write speeds anyway), I will be leaving that out.
+  
+We added _netdev as a workaround so that it won't block booting and so we can call the cryptsetup service later.
