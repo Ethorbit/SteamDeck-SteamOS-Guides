@@ -160,6 +160,17 @@ The next thing we will do is securely wipe them. **This is a process that will t
   
 Normally, this operation would allocate the entire disk with zeroes, but since all writes to these devices are encrypted, these zeroes will also be encrypted. This makes it way harder for attackers to figure out which parts of the encrypted disks actually contain user data.
   
+# Make filesystems for encrypted disks
+
+With your encrypted disks decrypted, use `mkfs` to make a filesystem for them, so that you can actually mount and write to them later.
+
+I will be using the Btrfs filesystem since it supports transparent compression, subvolumes, snapshotting, and more. The compression specifically is useful because it will help save space with no effort.
+
+* `mkfs.btrfs /dev/mapper/crypt_sdcard`
+* `mkfs.btrfs /dev/mapper/crypt_home`
+
+Note: SteamOS by default uses the ext4 filesystem (which is stable and fast), but missing the features mentioned.
+  
 # Mounting SteamOS /var partition
 
 So SteamOS's /etc has two directories' contents merged - one of them is read-only and the other is read-write and located on the var partition's lib/overlays/etc/upper/. Therefore, in order to make changes to the /etc directory, we need to first mount the SteamOS /var partition.
@@ -248,8 +259,7 @@ nvme0n1                     57.6G             disk
 └─nvme0n1p9                    2G             part  
 ```
  
-As you can see, the partitions we encrypted appear with the type "crypto_LUKS"
-My encryption partitions have the UUIDs `c29abde6-8237-410e-a338-f808ff065c99` and `b27f07a2-f2be-49b1-b769-c67d9ab2eb98`
+As you can see, the partitions we encrypted appear with the type "crypto_LUKS". Your UUIDs will be different than mine, do not use mine.
   
 Edit crypttab: `sudo nano /mnt/lib/overlays/etc/upper/crypttab`
 ```
@@ -257,6 +267,7 @@ crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,_ne
 crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,_netdev,nofail
 ```
   
-Note: if you want to add trim support for the nvme, add: `,discard` after nofail. While this will give better performance, it will also make the encryption less effective. Given the fact that my nvme is too small to run games and mostly just runs the OS (which does not require crazy read/write speeds anyway), I will be leaving that out.
+We added _netdev as a workaround so that it won't block booting and so we can call the cryptsetup service later.  
   
-We added _netdev as a workaround so that it won't block booting and so we can call the cryptsetup service later.
+Note: if you want to add trim support for the nvme, add: `,discard` after nofail. While this will give better performance, it will also make the encryption slightly less effective. Given the fact that my nvme is too small to run games and mostly just runs the OS (which does not require crazy read/write speeds anyway), I will be leaving that out.
+
