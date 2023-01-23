@@ -308,22 +308,91 @@ Warning: **compress is a btrfs option**, if you're not using btrfs: remove it.
 * `mkdir /mnt/mnt/sdcard`
 * `mkdir /mnt/home_no_encryption`
 
-# Creating scripted symlink home directory
+# Migrating to symlinked home directories
 
-### Why?
-  
 The reason we are doing this is so that we can make use of both the *unencrypted* and *encrypted* home directory **without** conflicting with software.
   
 SteamOS treats user home directories kinda like system installs. When a user has an empty home directory, it displays an install prompt and downloads steam files with an eventual Login panel appearing.
   
 ### What will happen
   
-Your home directory is going to be transformed into a symlink pointing to *another* directory. This *other* directory will be `/mnt/home_no_encryption/` after booting, but after decrypting, it will be `/home`. 
-  
-### Compatibility
+Your home directory is going to be transformed into a symlink pointing to *another* directory. This *other* directory will be `/mnt/home_no_encryption/` after booting, but after decrypting disks, it will be `/home`.
   
 All programs will be restarted after symlink changes to avoid conflicts, and they should "just work" as if nothing odd happened. Your $HOME path will always point to the symlink as if it were a normal directory.
   
-Create directory for scripts:
+All users with a UID between 1000 and 1050 will have their home directories forced. This should be compatible with the default user as well as any users you may create in the future.
+  
+### Creation
 * `mkdir -p /mnt/usr/sbin`
+  
+* `nano /mnt/usr/sbin/home_links.sh`
+```bash
+#!/bin/bash 
+#
+# SteamOS encryption home link script
+# Decrypts LUKS disks, swaps home directories after successful decryption
+#
+readonly unencrypted_home="/var/home_no_encryption"
+readonly encrypted_home="/home"  
+readonly link_home="/var/home_links"
+readonly uid_min=1000
+readonly uid_max=1050
+
+if [ $(id -u) -ne 0 ]; then 
+   echo "You need root"
+   exit
+fi
+
+[[ ! -d "$encrypted_home" ]] && echo "Encrypted home mountpoint is missing. ($encrypted_home)" && exit 1
+[[ ! -d "$unencrypted_home" ]] && echo "Unencrypted home pointpoint is missing. ($unencrypted_home)" && exit 1
+[[ ! "$uid_min" =~ [0-9]+ || ! "$uid_max" =~ [0-9]+ ]] && echo "uid_min and uid_max must be valid integers" && exit 1
+[[ "$uid_max" -le "$uid_min" ]] && echo "uid_max is greater or equal to uid_min" && exit 1
+
+mkdir -p "$link_home" 2> /dev/null
+  
+set_encrypted_link()
+{
+    encrypted="$1"
+
+    while IFS=: read -r user _ uid _ _ home _; do 
+        if [[ "$uid" -ge "$uid_min" && "$uid" -le "$uid_max" ]]; then  
+            # Make the home directory symlink point somewhere else
+            point_to="$unencrypted_home/$user"
+
+            if [[ "$encrypted" -eq 1 ]]; then
+                point_to="$encrypted_home/$user"
+            fi
+            
+            mkdir "$point_to" 2> /dev/null
+            ln -sf "$point_to" "$link_home"
+            
+            # Make sure the symlink home is actually their home directory
+            if [[ "$home" != "$link_home/$user" ]]; then 
+                usermod -d "$link_home/$user" "$user"
+            fi 
+            
+            # Now close all the programs
+            pkill -KILL "$user"
+        fi  
+    done < <(getent passwd)
+}
+  
+case $1 in 
+    --reset)
+        set_encrypted_link 0
+    ;;
+    --decrypt)
+        /sbin/systemctl start systemd-cryptsetup@*.service --all 
+        
+        if [[ $? -eq 0 ]]; then # check if it succeeded
+            set_encrypted_link 1
+        fi
+    ;;
+    *)
+        echo "--reset       Makes user homes point to the unencrypted home directory."
+        echo "--decrypt     Runs cryptsetup service to decrypt all LUKS devices, makes user homes point to the encrypted home directory upon success."
+    ;;
+esac
+```
+* `chmod +x /mnt/usr/sbin/home_links.sh`
   
