@@ -145,11 +145,11 @@ We will use cryptsetup luksFormat to setup encryption for them.
 * `cryptsetup luksFormat /dev/mmcblk0p1`
 * `cryptsetup luksFormat /dev/nvme0n1p8`
   
+It will ask you to confirm YES and then to enter a secure, memorable password. If you forget this password, you're screwed. Keep backups of important files.
+  
 This is optional, but you can also give them labels:
 * `cryptsetup config /dev/mmcblk0p1 --label crypt_sdcard`
 * `cryptsetup config /dev/nvme0n1p8 --label crypt_home`
-
-It will ask you to confirm YES and then to enter a secure, memorable password. If you forget this password, you're screwed. Keep backups of important files.
   
 Next we will open them
 * `cryptsetup luksOpen /dev/mmcblk0p1 crypt_sdcard`
@@ -281,7 +281,7 @@ crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,_ne
 crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,_netdev,nofail
 ```
   
-(We added _netdev as a workaround so that the entry won't block booting)
+(_netdev was added as a workaround so that the entry won't block booting, but will still exist in the cryptsetup service)
   
 Note: if you want to add trim support for the nvme home, add: `,discard` after nofail. While this will give better performance, it will also make the encryption slightly less effective. Given the fact that my nvme is too small to run games and mostly just runs the OS (which does not require crazy read/write speeds anyway), I will be leaving that out.
 
@@ -295,7 +295,7 @@ Add the unencrypted home:
 UUID="dffb7598-17c2-4202-a92d-acd89b324f30"     /var/home_no_encryption btrfs   defaults,nofail,compress=zstd:15        0       2
 ```
   
-And the LUKS mappings (**use the LUKS mapping UUIDs**, not partition ones)
+Add the LUKS mappings (**use the LUKS mapping UUIDs**, not partition ones)
 ```
 # LUKS mappings
 UUID="8694c03f-64e9-4601-bb97-f6cd4a3b3d5a"     /home   btrfs   defaults,noauto,nofail,compress=zstd:6  0       2
@@ -308,9 +308,22 @@ Warning: **compress is a btrfs option**, if you're not using btrfs: remove it.
 * `mkdir /mnt/mnt/sdcard`
 * `mkdir /mnt/home_no_encryption`
 
-# Create custom binaries directory
+# Creating scripted symlink home directory
 
-Because SteamOS for the most part is immutable, we will create our own superuser binary directory (which we'll use to store our own scripts):
+### Why?
+  
+The reason we are doing this is so that we can make use of both the *unencrypted* and *encrypted* home directory **without** conflicting with software.
+  
+SteamOS treats user home directories kinda like system installs. When a user has an empty home directory, it displays an install prompt and downloads steam files with an eventual Login panel appearing.
+  
+### What will happen
+  
+Your home directory is going to be transformed into a symlink pointing to *another* directory. This *other* directory will be `/mnt/home_no_encryption/` after booting, but after decrypting, it will be `/home`. 
+  
+### Compatibility
+  
+All programs will be restarted after symlink changes to avoid conflicts, and they should "just work" as if nothing odd happened. Your $HOME path will always point to the symlink as if it were a normal directory.
+  
+Create directory for scripts:
 * `mkdir -p /mnt/usr/sbin`
-* `sed -i '1s|^|\nexport PATH="$PATH:/var/usr/sbin"\n|' /mnt/lib/overlays/etc/upper/profile`
   
