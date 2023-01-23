@@ -399,11 +399,11 @@ esac
 
 As you can see, this is a root-only script. You won't be decrypting the system as root, so we will add a sudoer entry for the default user:
 
-`echo "deck ALL=(root) NOPASSWD: /mnt/usr/sbin/home_links.sh" >> /mnt/lib/overlays/etc/upper/sudoers`
+`echo "deck ALL=(root) NOPASSWD: /var/usr/sbin/home_links.sh" >> /mnt/lib/overlays/etc/upper/sudoers`
 
 If your username was changed from the default *deck*, make sure to change it there too.
 
-We are also going to create a service which will run at boot to reset the links.
+We are also going to create a service which will run at boot to reset the links:
 * nano /mnt/lib/overlays/etc/upper/systemd/system/reset-home-links.service
 ```bash
 [Service]
