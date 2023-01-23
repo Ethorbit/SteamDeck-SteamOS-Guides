@@ -316,7 +316,7 @@ SteamOS treats user home directories kinda like system installs. When a user has
   
 ### What will happen
   
-Your home directory is going to be transformed into a symlink pointing to *another* directory. This *other* directory will be `/mnt/home_no_encryption/` after booting, but after decrypting disks, it will be `/home`.
+Your home directory is going to be transformed into a symlink pointing to *another* directory. This *other* directory will be `/var/home_no_encryption` after booting, but after decrypting disks, it will be `/home`.
   
 All programs will be restarted after symlink changes to avoid conflicts, and they should "just work" as if nothing odd happened. Your $HOME path will always point to the symlink as if it were a normal directory.
   
@@ -395,4 +395,10 @@ case $1 in
 esac
 ```
 * `chmod +x /mnt/usr/sbin/home_links.sh`
-  
+* `chown root:root /mnt/usr/sbin/home_links.sh` (if it's not already)
+
+As you can see, this is a root-only script. You won't be decrypting the system as root, so we will add a sudoer entry for the default user:
+
+`echo "deck ALL=(root) NOPASSWD: /mnt/usr/sbin/home_links.sh" >> /mnt/lib/overlays/etc/upper/sudoers`
+
+If your username was changed from the default *deck*, make sure to change it there too.
