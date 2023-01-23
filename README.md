@@ -175,7 +175,7 @@ Note: *SteamOS by default uses the ext4 filesystem (which is stable and fast), b
 The unencrypted home:
 
 * `mkfs.btrfs  /dev/nvme0n1p9`
-* `btrfs filesystem label /dev/nvme0n1p9 home`
+* `btrfs filesystem label /dev/nvme0n1p9 unencrypted_home`
 
 The LUKS mappings:
 
@@ -187,28 +187,28 @@ The LUKS mappings:
 So SteamOS's /var directory is **very** different than what you'd normally expect from a typical distro. Most of SteamOS runs on an immutable filesystem which is overriden each update, so the /var directory was repurposed to just be "the place" for the user to modify some parts of the system at. Because of this, we will be making pretty much all file changes on /var.
  
 ```
-root@archiso ~ # lsblk -o name,label,size
-NAME             LABEL         SIZE
-loop0                        689.8M
-sda                              0B
-sdb                           57.8G
-├─sdb1           Ventoy       57.7G
-│ └─ventoy       ARCH_202207 795.3M
-└─sdb2           VTOYEFI        32M
-mmcblk0                      477.5G
-└─mmcblk0p1      sdcard      477.5G
-  └─crypt_sdcard             477.5G
-nvme0n1                       57.6G
-├─nvme0n1p1      esp            64M
-├─nvme0n1p2      efi            32M
-├─nvme0n1p3      efi            32M
-├─nvme0n1p4      rootfs          5G
-├─nvme0n1p5      rootfs          5G
-├─nvme0n1p6      var           256M
-├─nvme0n1p7      var           256M
-├─nvme0n1p8                     45G
-│ └─crypt_home                  45G
-└─nvme0n1p9                      2G
+root@archiso ~ # lsblk -o name,label,size                       
+NAME             LABEL              SIZE
+loop0                             689.8M
+sda                                   0B
+sdb                                57.8G
+├─sdb1           Ventoy            57.7G
+│ └─ventoy       ARCH_202207      795.3M
+└─sdb2           VTOYEFI             32M
+mmcblk0                           477.5G
+└─mmcblk0p1      crypt_sdcard     477.5G
+  └─crypt_sdcard                  477.5G
+nvme0n1                            57.6G
+├─nvme0n1p1      esp                 64M
+├─nvme0n1p2      efi                 32M
+├─nvme0n1p3      efi                 32M
+├─nvme0n1p4      rootfs               5G
+├─nvme0n1p5      rootfs               5G
+├─nvme0n1p6      var                256M
+├─nvme0n1p7      var                256M
+├─nvme0n1p8      crypt_home          45G
+│ └─crypt_home                       45G
+└─nvme0n1p9      unencrypted_home     2G
 ```  
   
 As you can see, there are are two SteamOS partitions with the label 'var' and size of 256M: mount the first one.
@@ -249,32 +249,33 @@ If we add the LUKS mapping paths to fstab, we can automatically mount them after
 Instead of referencing the device names, we will be using their UUIDs. You can view the UUID of every disk by entering: `lsblk -o name,label,size,fstype,type,uuid`
 ```
 root@archiso ~ # lsblk -o name,label,size,fstype,type,uuid
-NAME             LABEL         SIZE FSTYPE      TYPE  UUID
-loop0                        689.8M squashfs    loop  
-sda                              0B             disk  
-sdb                           57.8G             disk  
-├─sdb1           Ventoy       57.7G exfat       part  8623-8A3A
-│ └─ventoy       ARCH_202207 795.3M iso9660     dm    2022-07-01-13-20-00-00
-└─sdb2           VTOYEFI        32M vfat        part  5A89-BA75
-mmcblk0                      477.5G             disk  
-└─mmcblk0p1      sdcard      477.5G crypto_LUKS part  c29abde6-8237-410e-a338-f808ff065c99
-  └─crypt_sdcard             477.5G btrfs       crypt 80c91f87-2164-4286-8c2e-6d317849b262
-nvme0n1                       57.6G             disk  
-├─nvme0n1p1      esp            64M vfat        part  89B1-076D
-├─nvme0n1p2      efi            32M vfat        part  89B1-BC90
-├─nvme0n1p3      efi            32M vfat        part  89B2-685B
-├─nvme0n1p4      rootfs          5G btrfs       part  1fae9051-7984-45be-9600-865a94ad8808
-├─nvme0n1p5      rootfs          5G btrfs       part  4a39a236-7977-4eb7-8ea1-2a9c41ff7fee
-├─nvme0n1p6      var           256M ext4        part  c6e05ac9-5103-4808-9b5f-0d3de52a16e6
-├─nvme0n1p7      var           256M ext4        part  1041ad1e-13e1-4f86-ac15-fee153092189
-├─nvme0n1p8                     45G crypto_LUKS part  b27f07a2-f2be-49b1-b769-c67d9ab2eb98
-│ └─crypt_home                  45G btrfs       crypt 8694c03f-64e9-4601-bb97-f6cd4a3b3d5a
-└─nvme0n1p9                      2G             part  
+NAME             LABEL              SIZE FSTYPE      TYPE  UUID
+loop0                             689.8M squashfs    loop  
+sda                                   0B             disk  
+sdb                                57.8G             disk  
+├─sdb1           Ventoy            57.7G exfat       part  8623-8A3A
+│ └─ventoy       ARCH_202207      795.3M iso9660     dm    2022-07-01-13-20-00-00
+└─sdb2           VTOYEFI             32M vfat        part  5A89-BA75
+mmcblk0                           477.5G             disk  
+└─mmcblk0p1      crypt_sdcard     477.5G crypto_LUKS part  c29abde6-8237-410e-a338-f808ff065c99
+  └─crypt_sdcard                  477.5G btrfs       crypt 80c91f87-2164-4286-8c2e-6d317849b262
+nvme0n1                            57.6G             disk  
+├─nvme0n1p1      esp                 64M vfat        part  89B1-076D
+├─nvme0n1p2      efi                 32M vfat        part  89B1-BC90
+├─nvme0n1p3      efi                 32M vfat        part  89B2-685B
+├─nvme0n1p4      rootfs               5G btrfs       part  1fae9051-7984-45be-9600-865a94ad8808
+├─nvme0n1p5      rootfs               5G btrfs       part  4a39a236-7977-4eb7-8ea1-2a9c41ff7fee
+├─nvme0n1p6      var                256M ext4        part  c6e05ac9-5103-4808-9b5f-0d3de52a16e6
+├─nvme0n1p7      var                256M ext4        part  1041ad1e-13e1-4f86-ac15-fee153092189
+├─nvme0n1p8      crypt_home          45G crypto_LUKS part  b27f07a2-f2be-49b1-b769-c67d9ab2eb98
+│ └─crypt_home                       45G btrfs       crypt 8694c03f-64e9-4601-bb97-f6cd4a3b3d5a
+└─nvme0n1p9      unencrypted_home     2G btrfs       part  dffb7598-17c2-4202-a92d-acd89b324f30
 ```
  
 As you can see, the partitions we encrypted appear with the type "crypto_LUKS". Your UUIDs will be different than mine, **do not use mine.**
   
-Edit crypttab: `nano /mnt/lib/overlays/etc/upper/crypttab` (use the **partition UUIDs**, not the LUKS mapping ones)
+### Crypttab
+Edit crypttab: `nano /mnt/lib/overlays/etc/upper/crypttab` (**use the partition UUIDs**, not the LUKS mapping ones)
 ```
 crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,_netdev,nofail 
 crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,_netdev,nofail
@@ -284,18 +285,28 @@ crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,_ne
   
 Note: if you want to add trim support for the nvme home, add: `,discard` after nofail. While this will give better performance, it will also make the encryption slightly less effective. Given the fact that my nvme is too small to run games and mostly just runs the OS (which does not require crazy read/write speeds anyway), I will be leaving that out.
 
-Edit fstab: `nano /mnt/lib/overlays/etc/upper/fstab` (use the **LUKS mapping UUIDs**, not the partition ones)
+### Fstab
+Edit fstab: `nano /mnt/lib/overlays/etc/upper/fstab`
   
 First off, there is an existing line for /home: remove it.
-  
+ 
+Add the unencrypted home:
 ```
+UUID="dffb7598-17c2-4202-a92d-acd89b324f30"     /var/home_no_encryption btrfs   defaults,nofail,compress=zstd:15        0       2
+```
+  
+And the LUKS mappings (**use the LUKS mapping UUIDs**, not partition ones)
+```
+# LUKS mappings
 UUID="8694c03f-64e9-4601-bb97-f6cd4a3b3d5a"     /home   btrfs   defaults,noauto,nofail,compress=zstd:6  0       2
 UUID="80c91f87-2164-4286-8c2e-6d317849b262"    /mnt/sdcard     btrfs   defaults,noauto,nofail,compress=zstd:6  0       2  
 ```
   
-(We added nofail and noauto so it won't block booting)
+Warning: **compress is a btrfs option**, if you're not using btrfs: remove it.
   
-Create the sdcard's mount directory: `mkdir /mnt/mnt/sdcard`
+**The fstab entries will always fail** if the mount paths don't exist, so create them:
+* `mkdir /mnt/mnt/sdcard`
+* `mkdir /mnt/home_no_encryption`
 
 # Create custom binaries directories
 Because SteamOS for the most part is immutable, we will create our own custom directories for binaries on the /var partition, since we know files on /var will not get overriden by updates.
