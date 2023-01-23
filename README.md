@@ -144,6 +144,10 @@ My /dev/mmcblk0p1 and /dev/nvme0n1p8 are the two partitions that need to be encr
 We will use cryptsetup luksFormat to setup encryption for them. 
 * `cryptsetup luksFormat /dev/mmcblk0p1`
 * `cryptsetup luksFormat /dev/nvme0n1p8`
+  
+This is optional, but you can also give them labels:
+* `cryptsetup config /dev/mmcblk0p1 --label crypt_sdcard`
+* `cryptsetup config /dev/nvme0n1p8 --label crypt_home`
 
 It will ask you to confirm YES and then to enter a secure, memorable password. If you forget this password, you're screwed. Keep backups of important files.
   
@@ -160,7 +164,7 @@ The next thing we will do is securely wipe them. **This is a process that will t
   
 Normally, this operation would allocate the entire disk with zeroes, but since all writes to these devices are encrypted, these zeroes will also be encrypted. This makes it way harder for attackers to figure out which parts of the encrypted disks actually contain user data.
   
-# Make filesystems
+# Making filesystems
 
 Use `mkfs` to make a filesystem for the partitions you created, so that you can actually mount and write to them later.
 
@@ -168,7 +172,8 @@ I will be using the Btrfs filesystem since it supports transparent compression, 
 
 The unencrypted home
 
-* `mkfs.btrfs /dev/nvme0n1p9`
+* `mkfs.btrfs  /dev/nvme0n1p9`
+* `btrfs filesystem label /dev/nvme0n1p9 home`
 
 The decrypted devices
 
