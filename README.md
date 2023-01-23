@@ -308,5 +308,9 @@ Warning: **compress is a btrfs option**, if you're not using btrfs: remove it.
 * `mkdir /mnt/mnt/sdcard`
 * `mkdir /mnt/home_no_encryption`
 
-# Create custom binaries directories
-Because SteamOS for the most part is immutable, we will create our own custom directories for binaries on the /var partition, since we know files on /var will not get overriden by updates.
+# Create custom binaries directory
+
+Because SteamOS for the most part is immutable, we will create our own superuser binary directory (which we'll use to store our own scripts):
+* `mkdir -p /mnt/usr/sbin`
+* `sed -i '1s|^|\nexport PATH="$PATH:/var/usr/sbin"\n|' /mnt/lib/overlays/etc/upper/profile`
+  
