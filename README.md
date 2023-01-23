@@ -38,7 +38,7 @@ Enter these commands:
 # Booting into a Linux installer
 Despite its name, we are not actually going to be "installing" anything; we just need a separate temporary Linux environment to use while we manage and encrypt partitions. We are doing it this way to simply avoid any file conflicts. My flash drive has Ventoy with an Arch Linux Installer .iso on it, so I will be booting from that.
 
-With the Deck powered off and usb devices plugged in, hold the Volume Down and Power button at the same time to reach the boot menu. Select the Flash drive
+With the Deck powered off and usb devices plugged in, hold the Volume Down and Power button at the same time to reach the boot menu. Select the Flash drive.
 
 [![Video Tutorial](https://i.imgur.com/6VH6ZiY.jpg)](https://www.youtube.com/watch?v=2_Pkv4tr8Ho)
 
@@ -346,7 +346,7 @@ fi
 [[ ! -d "$encrypted_home" ]] && echo "Encrypted home mountpoint is missing. ($encrypted_home)" && exit 1
 [[ ! -d "$unencrypted_home" ]] && echo "Unencrypted home pointpoint is missing. ($unencrypted_home)" && exit 1
 [[ ! "$uid_min" =~ [0-9]+ || ! "$uid_max" =~ [0-9]+ ]] && echo "uid_min and uid_max must be valid integers" && exit 1
-[[ "$uid_max" -le "$uid_min" ]] && echo "uid_max is greater or equal to uid_min" && exit 1
+[[ "$uid_max" -le "$uid_min" ]] && echo "uid_max is less than or equal to uid_min" && exit 1
 
 mkdir -p "$link_home" 2> /dev/null
   
@@ -372,7 +372,7 @@ set_encrypted_link()
             fi 
             
             # Now close all the programs
-            pkill -KILL "$user"
+            pkill -KILL -u "$user"
         fi  
     done < <(getent passwd)
 }
@@ -395,10 +395,26 @@ case $1 in
 esac
 ```
 * `chmod +x /mnt/usr/sbin/home_links.sh`
-* `chown root:root /mnt/usr/sbin/home_links.sh` (if it's not already)
+* `chown root:root /mnt/usr/sbin/home_links.sh`
 
 As you can see, this is a root-only script. You won't be decrypting the system as root, so we will add a sudoer entry for the default user:
 
 `echo "deck ALL=(root) NOPASSWD: /mnt/usr/sbin/home_links.sh" >> /mnt/lib/overlays/etc/upper/sudoers`
 
 If your username was changed from the default *deck*, make sure to change it there too.
+
+We are also going to create a service which will run at boot to reset the links.
+* nano /mnt/lib/overlays/etc/upper/systemd/system/reset-home-links.service
+```bash
+[Service]
+Type=simple
+ExecStart=/var/usr/sbin/home_links.sh --reset
+Before=graphical.target
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Now we need to enable this service:
+
+`ln -s "/mnt/lib/overlays/etc/upper/systemd/system/reset-home-links.service" "/mnt/lib/overlays/etc/upper/systemd/system/multi-user.target.wants/reset-home-links.service"`
