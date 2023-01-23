@@ -139,7 +139,7 @@ For me, 8 has 45G and 9 has 2G. Perfect!
 # Encrypting
 My /dev/mmcblk0p1 and /dev/nvme0n1p8 are the two partitions that need to be encrypted.
   
-![warning-icon](https://i.imgur.com/ZWdfbEN.png) Make sure you double check that the partitions you are about to encrypt are the ones **you** created, these next actions have the potential to bork your whole SteamOS install (if passed the wrong partition(s).)
+![warning-icon](https://i.imgur.com/ZWdfbEN.png) **Make sure you double check that the partitions you are about to encrypt are the ones you created**, these next actions have the potential to bork your whole SteamOS install (if passed the wrong partition(s).)
 
 We will use cryptsetup luksFormat to setup encryption for them. 
 * `cryptsetup luksFormat /dev/mmcblk0p1`
@@ -155,7 +155,7 @@ Next we will open them
 * `cryptsetup luksOpen /dev/mmcblk0p1 crypt_sdcard`
 * `cryptsetup luksOpen /dev/nvme0n1p8 crypt_home`
 
-We should never use them directly as they are now encrypted. The decrypted (opened) devices are located at /dev/mapper/crypt_sdcard and /dev/mapper/crypt_home.
+We should never use them directly as they are now encrypted. The LUKS mappings (opened) devices are located at /dev/mapper/crypt_sdcard and /dev/mapper/crypt_home.
   
 The next thing we will do is securely wipe them. **This is a process that will take a long time to complete**, especially with the slower SD card - which is why you should be charging your deck by now.
 
@@ -170,17 +170,17 @@ Use `mkfs` to make a filesystem for the partitions you created, so that you can 
 
 I will be using the Btrfs filesystem since it supports transparent compression, subvolumes, snapshotting, and more. The compression specifically is useful, because it will help save space with no effort.
 
-The unencrypted home
+Note: *SteamOS by default uses the ext4 filesystem (which is stable and fast), but missing the optional features mentioned.*
+  
+The unencrypted home:
 
 * `mkfs.btrfs  /dev/nvme0n1p9`
 * `btrfs filesystem label /dev/nvme0n1p9 home`
 
-The decrypted devices
+The LUKS mappings:
 
 * `mkfs.btrfs /dev/mapper/crypt_sdcard`
 * `mkfs.btrfs /dev/mapper/crypt_home`
-
-Note: SteamOS by default uses the ext4 filesystem (which is stable and fast), but missing the features mentioned.
   
 # Mounting SteamOS /var partition
 
@@ -244,7 +244,7 @@ drwxr-xr-x  4 root root  1.0K Jan 21 07:31 usr
 
 The cryptsetup service checks for disks in crypttab, we can invoke this service later to get a handy passphrase prompt for all disks to decrypt. The cryptsetup service caches passphrases, so if multiple disks have the same one, you only need to enter it once. 
   
-If we add the decrypted partition paths to fstab, we can automatically mount them after decryption.
+If we add the LUKS mapping paths to fstab, we can automatically mount them after decrypting the partitions.
   
 Instead of referencing the device names, we will be using their UUIDs. You can view the UUID of every disk by entering: `lsblk -o name,label,size,fstype,type,uuid`
 ```
@@ -274,7 +274,7 @@ nvme0n1                       57.6G             disk
  
 As you can see, the partitions we encrypted appear with the type "crypto_LUKS". Your UUIDs will be different than mine, **do not use mine.**
   
-Edit crypttab: `nano /mnt/lib/overlays/etc/upper/crypttab` (use the **partition UUIDs**, not the decrypted ones)
+Edit crypttab: `nano /mnt/lib/overlays/etc/upper/crypttab` (use the **partition UUIDs**, not the LUKS mapping ones)
 ```
 crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,_netdev,nofail 
 crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,_netdev,nofail
@@ -284,7 +284,7 @@ crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,_ne
   
 Note: if you want to add trim support for the nvme home, add: `,discard` after nofail. While this will give better performance, it will also make the encryption slightly less effective. Given the fact that my nvme is too small to run games and mostly just runs the OS (which does not require crazy read/write speeds anyway), I will be leaving that out.
 
-Edit fstab: `nano /mnt/lib/overlays/etc/upper/fstab` (use the **decrypted UUIDs**, not the partition ones)
+Edit fstab: `nano /mnt/lib/overlays/etc/upper/fstab` (use the **LUKS mapping UUIDs**, not the partition ones)
   
 First off, there is an existing line for /home: remove it.
   
