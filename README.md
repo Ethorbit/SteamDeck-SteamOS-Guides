@@ -21,24 +21,51 @@ I'm not responsible for any damage or data loss.
 
 ![Example](https://i.imgur.com/W7EdVYn.png)
 
-# Enabling TPM and dm_crypt
-
-For some reason, Valve has intentionally disabled TPM and dm_crypt. These are needed for encryption.
+# Opening Desktop terminal
 
 * Press the Steam button > Power and Switch to Desktop. 
 * Find and open Konsole. 
 
-If you haven't already setup a password: type `passwd` to do so.
+If you haven't already set a password: type `passwd` to do so.
+
+
+# Enabling TPM and dm_crypt
+
+For some reason, Valve has intentionally disabled TPM and dm_crypt. These are needed for encryption.
 
 Enter these commands:
 * `echo "dm_crypt" | sudo tee /etc/modules-load.d/dm_crypt.conf`
 * `sudo sed -i "s/module_blacklist=tpm//" /etc/default/grub`
 * `sudo update-grub`
 
+# Adding verbosity to boot
+
+The chances of something going wrong and not being able to boot after this guide is pretty high. It is going to be pretty impossible to determine *why* the system isn't booting if all you see is a logo and then nothing.
+
+Edit 00_header: `sudo nano /etc/grub.d/00_header`
+
+Look for a line called *steamenv_quiet* and place a # at the beginning to comment it out.
+Copy paste the steamenv_noisy line and rename the copy from *steamenv_noisy* to *steamenv_quiet*
+
+It should look like this:
+```bash
+# steamenv_quiet="loglevel=3 splash quiet plymouth.ignore-serial-consoles fbcon=vc:4-6"
+steamenv_quiet="loglevel=4 splash=verbose fbcon=nodefer"
+steamenv_noisy="loglevel=4 splash=verbose fbcon=nodefer"
+```
+
+Update grub: `sudo update-grub`
+
+Before proceeding, **reboot to make sure there is text instead of a logo.**
+
+Note: *There will always be an animation that shows when the deck turns on.*
+
+[![Example](https://i.imgur.com/4NxaV5I.png)
+
 # Booting into a Linux installer
 Despite its name, we are not actually going to be "installing" anything; we just need a separate temporary Linux environment to use while we manage and encrypt partitions. We are doing it this way to simply avoid any file conflicts. My flash drive has Ventoy with an Arch Linux Installer .iso on it, so I will be booting from that.
 
-With the Deck powered off and usb devices plugged in, hold the Volume Down and Power button at the same time to reach the boot menu. Select the Flash drive.
+With the Deck powered off and usb devices plugged in, hold the Volume Down and Power button at the same time until you hear a noise to reach the boot menu. Select the Flash drive.
 
 [![Video Tutorial](https://i.imgur.com/6VH6ZiY.jpg)](https://www.youtube.com/watch?v=2_Pkv4tr8Ho)
 
@@ -170,7 +197,7 @@ Use `mkfs` to make a filesystem for the partitions you created, so that you can 
 
 I will be using the Btrfs filesystem since it supports transparent compression, subvolumes, snapshotting, and more. The compression specifically is useful, because it will help save space with no effort.
 
-Note: *SteamOS by default uses the ext4 filesystem (which is stable and fast), but missing the optional features mentioned.*
+Note: *SteamOS's /home by default uses the ext4 filesystem (which is stable and fast), but missing the optional features mentioned.*
   
 The unencrypted home:
 
@@ -307,7 +334,7 @@ Warning: **compress is a btrfs option**, if you're not using btrfs: remove it.
 **The fstab entries will always fail** if the mount paths don't exist, so create them:
 * `mkdir /mnt/mnt/sdcard`
 * `mkdir /mnt/home_no_encryption`
-
+  
 # Migrating to symlinked home directories
 
 The reason we are doing this is so that we can make use of both the *unencrypted* and *encrypted* home directory **without** conflicting with software.
@@ -320,7 +347,7 @@ Your home directory is going to be transformed into a symlink pointing to *anoth
   
 All programs will be restarted after symlink changes to avoid conflicts, and they should "just work" as if nothing odd happened. Your $HOME path will always point to the symlink as if it were a normal directory.
   
-All users with a UID between 1000 and 1050 will have their home directories forced. This should be compatible with the default user as well as any users you may create in the future.
+All users with a UID between 1001 and 1050 will have their home directories forced. This should skip the built-in user, and apply to the user you created manually as well as any other users you create manually in the future.
   
 ### Creation
 * `mkdir -p /mnt/usr/sbin`
@@ -335,7 +362,7 @@ All users with a UID between 1000 and 1050 will have their home directories forc
 readonly unencrypted_home="/var/home_no_encryption"
 readonly encrypted_home="/home"  
 readonly link_home="/var/home_links"
-readonly uid_min=1000
+readonly uid_min=1001
 readonly uid_max=1050
 
 if [ $(id -u) -ne 0 ]; then 
@@ -358,12 +385,17 @@ set_encrypted_link()
         if [[ "$uid" -ge "$uid_min" && "$uid" -le "$uid_max" ]]; then  
             # Make the home directory symlink point somewhere else
             point_to="$unencrypted_home/$user"
-
+ 
             if [[ "$encrypted" -eq 1 ]]; then
                 point_to="$encrypted_home/$user"
             fi
             
-            mkdir "$point_to" 2> /dev/null
+            if [ ! -d "$point_to" ]; then 
+                mkdir "$point_to"
+                chown "$user":"$user" "$point_to"
+                chmod 700 "$point_to"
+            fi
+
             ln -sf "$point_to" "$link_home"
             
             # Make sure the symlink home is actually their home directory
@@ -395,13 +427,12 @@ case $1 in
 esac
 ```
 * `chmod +x /mnt/usr/sbin/home_links.sh`
-* `chown root:root /mnt/usr/sbin/home_links.sh`
 
-As you can see, this is a root-only script. You won't be decrypting the system as root, so we will add a sudoer entry for the default user:
+This is a root-only script. You won't be decrypting the system as root, so we will add a sudoer entry for the default user:
 
 `echo "deck ALL=(root) NOPASSWD: /var/usr/sbin/home_links.sh" >> /mnt/lib/overlays/etc/upper/sudoers`
 
-If your username was changed from the default *deck*, make sure to change it there too.
+**If your username was changed from the default 'deck', make sure to change it there too.**
 
 We are also going to create a service which will run at boot to reset the links:
 * nano /mnt/lib/overlays/etc/upper/systemd/system/reset-home-links.service
@@ -418,3 +449,16 @@ WantedBy=multi-user.target
 Now we need to enable this service:
 
 `ln -s "/mnt/lib/overlays/etc/upper/systemd/system/reset-home-links.service" "/mnt/lib/overlays/etc/upper/systemd/system/multi-user.target.wants/reset-home-links.service"`
+  
+We will want a decryption prompt as soon as we open terminal, so let's mount the unencrypted home directory and add the .bashrc:
+* `umount /mnt`
+* `mount /dev/disk/by-label/unencrypted_home /mnt`
+* `mkdir /mnt/deck`
+* `chown 1000:1000 /mnt/deck`
+* `echo "sudo /mnt/usr/sbin/home_links.sh --decrypt" > /mnt/deck/.bashrc`
+  
+Again, make sure to use *your* device ID and replace 'deck' if your username is different. 
+  
+It is time to boot back into SteamOS: `shutdown -r now`
+  
+# Booting back into the system
