@@ -1,4 +1,4 @@
-# Steam Deck on SteamOS with LUKS Encryption
+# Steam Deck (SteamOS) LUKS Encryption
 This is a Steam Deck SteamOS guide for LUKS encryption which works with the on-screen keyboard and does not require a SteamOS reinstall. 
 
 To make this all possible; Full Disk Encryption simply can't work. We will be encrypting the SD card and /home instead, which will still protect your Steam logins, browser cookies, cache and other important user data. 
@@ -420,6 +420,7 @@ case $1 in
         /sbin/systemctl start systemd-cryptsetup@*.service --all 
         
         if [[ $? -eq 0 ]]; then # check if it succeeded
+            mount -a
             set_encrypted_link 1
         fi
     ;;
@@ -458,10 +459,21 @@ We will want a decryption prompt as soon as we open terminal, so let's mount the
 * `mount /dev/disk/by-label/unencrypted_home /mnt`
 * `mkdir /mnt/deck`
 * `chown 1000:1000 /mnt/deck`
-* `echo "sudo /mnt/usr/sbin/home_links.sh --decrypt" > /mnt/deck/.bashrc`
+* `chmod 700 /mnt/deck`
+* `echo "sudo /var/usr/sbin/home_links.sh --decrypt" > /mnt/deck/.bashrc`
+* `chown 1000:1000 /mnt/deck/.bashrc`
   
-Again, make sure to use *your* device ID and replace 'deck' if your username is different. 
+Again, make sure to use *your* device ID and replace 'deck' if your username is different. You can check if 1000 is the right UID with: `cat /mnt/lib/overlays/etc/upper/passwd | cut -d ":" -f 1,3`
   
 It is time to boot back into SteamOS: `shutdown -r now`
   
 # Booting back into the system
+  
+If everything worked, the screen will be black for a few minutes and then a Steam setup menu should appear.
+  
+![Example](https://i.imgur.com/LpVYZiX.png)
+  
+### Create a disposable Steam account
+This Steam install simply exists to decrypt the system every time you boot, you will **not** use it to play games (the unencrypted partition only has enough space for the Steam install anyway)
+  
+Login using a throwaway Steam account (if you do not have one, create a new one). Since this partition is not encrypted, you don't want to login with anything you care about.
