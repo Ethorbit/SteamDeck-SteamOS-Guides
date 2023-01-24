@@ -65,7 +65,7 @@ Note: *There will always be an animation that shows when the deck turns on.*
 # Booting into a Linux installer
 Despite its name, we are not actually going to be "installing" anything; we just need a separate temporary Linux environment to use while we manage and encrypt partitions. We are doing it this way to simply avoid any file conflicts. My flash drive has Ventoy with an Arch Linux Installer .iso on it, so I will be booting from that.
 
-With the Deck powered off and usb devices plugged in, hold the Volume Down and Power button at the same time until you hear a noise to reach the boot menu. Select the Flash drive.
+With the Deck powered off and usb devices plugged in, hold the Volume Down and Power button at the same time until you hear a noise. Select the Flash drive to boot into it.
 
 [![Video Tutorial](https://i.imgur.com/6VH6ZiY.jpg)](https://www.youtube.com/watch?v=2_Pkv4tr8Ho)
 
