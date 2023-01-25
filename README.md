@@ -314,12 +314,10 @@ As you can see, the partitions we encrypted appear with the type "crypto_LUKS". 
 ### Crypttab
 Edit crypttab: `nano /mnt/lib/overlays/etc/upper/crypttab` (**use the partition UUIDs**, not the LUKS mapping ones)
 ```
-crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,discard,_netdev,nofail
-crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,_netdev,nofail
+crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,discard,noauto,nofail,noearly
+crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,noauto,nofail,noearly
 ```
-  
-(_netdev was added so that the entry won't block booting, but will still exist in the cryptsetup service)
-  
+ 
 #### `discard`
 The `discard` is there to enable TRIM support for the NVMe. This will make the dd operation we did meaningless with time, which will make it easier for attackers to know what parts of the disk has been free'd and such. You can remove it if you want, but just know that not having TRIM enabled for an SSD can alter performance while off and may decrease longevity of the drive. Your data will still be encrypted regardless.
   
