@@ -334,6 +334,8 @@ UUID="4332ebb6-534d-4dad-901c-7ca008b7d954"     /home   ext4    defaults        
 # Unencrypted home
 UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /var/mnt/home_no_encryption     btrfs   defaults,compress=zstd:15       0       2
 ```
+	
+Note: **compress is a btrfs option**, remove it if you're not using btrfs.
 
 ### Mount service
 We can't add our encrypted partitions to fstab, because they will block booting. We are going to create a service for this instead.
