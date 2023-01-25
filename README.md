@@ -142,13 +142,18 @@ Here in my case, we can see the Type "Linux Home" is partition # 8 (the largest 
   
 * `fdisk /dev/nvme0n1` 
 * Enter d and then enter the # of the home partition
+#### Symlink home
 * Enter n, press enter twice until it asks for "Last Sector"
-* For Last Sector, I will enter `-2G`. -2G means I'm leaving 2 gigabytes of space for the unencrypted partition we'll create next, which will only need enough for a Steam install. You can reduce it by more if you think it might require more space in the future.
-* Enter Y to remove the signature (if it asks)
-* Enter n and press enter until it stops asking. This will be unencrypted home.
+* For Last Sector, enter +5M (It only contains a symlink for each user, 5 mebibytes should do.)
+* If it asks, enter Y to remove the signature
+#### Unencrypted home
+* Enter n and again, enter until "Last Sector"
+* For Last Sector, I will enter +2.5G. +2.5G means I'm giving 2.5 gibibytes of space for the unencrypted home partition, which will only need enough space for a Steam install. You can change as you see fit.
+#### Encrypted home
+* Enter n and press enter until it stops asking. This will be the encrypted home where you'll *actually* store files.
 * Enter p to check if your partitions look good. 
 ```
-  Device             Start       End  Sectors  Size Type
+Device             Start       End  Sectors  Size Type
 /dev/nvme0n1p1      2048    133119   131072   64M EFI System
 /dev/nvme0n1p2    133120    198655    65536   32M Microsoft basic data
 /dev/nvme0n1p3    198656    264191    65536   32M Microsoft basic data
@@ -156,31 +161,31 @@ Here in my case, we can see the Type "Linux Home" is partition # 8 (the largest 
 /dev/nvme0n1p5  10749952  21235711 10485760    5G Linux root (x86-64)
 /dev/nvme0n1p6  21235712  21759999   524288  256M Linux variable data
 /dev/nvme0n1p7  21760000  22284287   524288  256M Linux variable data
-/dev/nvme0n1p8  22284288 116637695 94353408   45G Linux filesystem
-/dev/nvme0n1p9 116637696 120829951  4192256    2G Linux filesystem
+/dev/nvme0n1p8  22284288  22294527    10240    5M Linux filesystem
+/dev/nvme0n1p9  22294528  27537407  5242880  2.5G Linux filesystem
+/dev/nvme0n1p10 27537408 120829951 93292544 44.5G Linux filesystem
 ```
   
-For me, 8 has 45G and 9 has 2G. Perfect!
 * Enter w to write changes
   
 # Encrypting
 My /dev/mmcblk0p1 and /dev/nvme0n1p8 are the two partitions that need to be encrypted.
   
-![warning-icon](https://i.imgur.com/ZWdfbEN.png) **Make sure you double check that the partitions you are about to encrypt are the ones you created**, these next actions have the potential to bork your whole SteamOS install (if passed the wrong partition(s).)
+![warning-icon](https://i.imgur.com/ZWdfbEN.png) **Make sure you double check that the partitions you are about to encrypt are the ones YOU created**, these next actions have the potential to bork your whole SteamOS install (if passed the wrong partition(s).)
 
 We will use cryptsetup luksFormat to setup encryption for them. 
 * `cryptsetup luksFormat /dev/mmcblk0p1`
-* `cryptsetup luksFormat /dev/nvme0n1p8`
+* `cryptsetup luksFormat /dev/nvme0n1p10`
   
 It will ask you to confirm YES and then to enter a secure, memorable password. If you forget this password, you're screwed. Keep backups of important files.
   
 This is optional, but you can also give them labels:
 * `cryptsetup config /dev/mmcblk0p1 --label crypt_sdcard`
-* `cryptsetup config /dev/nvme0n1p8 --label crypt_home`
+* `cryptsetup config /dev/nvme0n1p10 --label crypt_home`
   
 Next we will open them
 * `cryptsetup luksOpen /dev/mmcblk0p1 crypt_sdcard`
-* `cryptsetup luksOpen /dev/nvme0n1p8 crypt_home`
+* `cryptsetup luksOpen /dev/nvme0n1p10 crypt_home`
 
 We should never use them directly as they are now encrypted. The LUKS mappings (opened) devices are located at /dev/mapper/crypt_sdcard and /dev/mapper/crypt_home.
   
@@ -195,9 +200,13 @@ Normally, this operation would allocate the entire disk with zeroes, but since a
 
 Use `mkfs` to make a filesystem for the partitions you created, so that you can actually mount and write to them later.
 
-I will be using the Btrfs filesystem since it supports transparent compression, subvolumes, snapshotting, and more. The compression specifically is useful, because it will help save space with no effort.
+I will mostly be using the Btrfs filesystem since it supports transparent compression, subvolumes, deduplication, snapshotting, and more. The compression specifically is useful, because it will help save space with no effort.
 
 Note: *SteamOS's /home by default uses the ext4 filesystem (which is stable and fast), but missing the optional features mentioned.*
+  
+The symlink home:
+* `mkfs.ext4 /dev/nvme0n1p8`
+* `e2label /dev/nvme0n1p8 symlink_home`
   
 The unencrypted home:
 
@@ -320,16 +329,11 @@ Edit fstab: `nano /mnt/lib/overlays/etc/upper/fstab`
   
 First off, there is an existing line for /home: remove it.
  
-Add the unencrypted home:
 ```
 UUID="dffb7598-17c2-4202-a92d-acd89b324f30"     /var/home_no_encryption btrfs   defaults,nofail,compress=zstd:15        0       2
-```
   
-Add the LUKS mappings (**use the LUKS mapping UUIDs**, not partition ones)
-```
-# LUKS mappings
-UUID="8694c03f-64e9-4601-bb97-f6cd4a3b3d5a"     /home   btrfs   defaults,noauto,nofail,compress=zstd:6  0       2
-UUID="80c91f87-2164-4286-8c2e-6d317849b262"    /mnt/sdcard     btrfs   defaults,noauto,nofail,compress=zstd:6  0       2  
+/dev/mapper/crypt_home    /home   btrfs   defaults,noauto,nofail,compress=zstd:6  0       2
+/dev/mapper/crypt_sdcard  /mnt/sdcard     btrfs   defaults,noauto,nofail,compress=zstd:6  0       2  
 ```
   
 Warning: **compress is a btrfs option**, if you're not using btrfs: remove it.
@@ -346,7 +350,7 @@ SteamOS treats user home directories kinda like system installs. When a user has
   
 ### What will happen
   
-Your home directory is going to be transformed into a symlink pointing to *another* directory. This *other* directory will be `/var/home_no_encryption` after booting, but after decrypting disks, it will be `/home`.
+Your home directory is going to be transformed into a symlink pointing to *another* directory. This *other* directory will be `/var/home_no_encryption` after booting, but after decrypting, it will be `/home`.
   
 All programs will be restarted after symlink changes to avoid conflicts, and they should "just work" as if nothing odd happened. Your $HOME path will always point to the symlink as if it were a normal directory.
   
@@ -363,8 +367,8 @@ All users with a UID between 1001 and 1050 will have their home directories forc
 # Decrypts LUKS disks, swaps home directories after successful decryption
 #
 readonly unencrypted_home="/var/home_no_encryption"
-readonly encrypted_home="/home"  
-readonly link_home="/var/home_links"
+readonly encrypted_home="/var/home"  
+readonly link_home="/home"
 readonly uid_min=1001
 readonly uid_max=1050
 
@@ -477,3 +481,17 @@ If everything worked, the screen will be black for a few minutes and then a Stea
 This Steam install simply exists to decrypt the system every time you boot, you will **not** use it to play games (the unencrypted partition only has enough space for the Steam install anyway)
   
 Login using a throwaway Steam account (if you do not have one, create a new one). Since this partition is not encrypted, you don't want to login with anything you care about.
+
+### Attempt decryption
+With your new account, go to the Desktop and open Konsole. There should be a LUKS password prompt as soon as it opens, enter the password.
+  
+If it works, your screen will go black for a few minutes like before, and another Steam Setup menu will appear. If your disposable account is not there, this means that you are now using the **encrypted** disks, and you can feel free to do whatever now.
+  
+#### Adding Konsole as a non-steam game
+If you don't like having to switch to Desktop every time, you can bring Konsole into your Steam library too. 
+  
+* Go to the Desktop and open Steam. 
+* On the bottom left, click [+] Add A Game
+* Click Add a Non-Steam Game
+* Find and select Konsole from the list
+  
