@@ -330,7 +330,11 @@ Edit fstab: `nano /mnt/lib/overlays/etc/upper/fstab`
   
 Replace the existing /home line with this:
 ```
-UUID="dffb7598-17c2-4202-a92d-acd89b324f30" /home   ext4    defaults    0   2
+# Symlinked home
+UUID="4332ebb6-534d-4dad-901c-7ca008b7d954"     /home   ext4    defaults        0       2
+
+# Unencrypted home
+UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /var/mnt/home_no_encryption     btrfs   defaults,compress=zstd:15       0       2
 ```
 
 ### Mount service
@@ -371,7 +375,7 @@ SteamOS treats user home directories kinda like system installs. When a user has
   
 ### What will happen
   
-Your home directory is going to be transformed into a symlink pointing to *another* directory. This *other* directory will be `/var/home_no_encryption` after booting, but after decrypting, it will be `/home`.
+Your home directory is going to be transformed into a symlink pointing to *another* directory. This *other* directory will be `/mnt/home_no_encryption` after booting, but after decrypting, it will be `/mnt/home`.
   
 All programs will be restarted after symlink changes to avoid conflicts, and they should "just work" as if nothing odd happened. Your $HOME path will always point to the symlink as if it were a normal directory.
   
@@ -385,10 +389,10 @@ All users with a UID between 1001 and 1050 will have their home directories forc
 # SteamOS encryption home link script
 # Decrypts LUKS disks, swaps home directories after successful decryption
 #
-readonly unencrypted_home="/var/home_no_encryption"
-readonly encrypted_home="/var/home"  
+readonly unencrypted_home="/var/mnt/home_no_encryption"
+readonly encrypted_home="/var/mnt/home"  
 readonly link_home="/home"
-readonly uid_min=1001
+readonly uid_min=1000
 readonly uid_max=1050
 
 if [ $(id -u) -ne 0 ]; then 
@@ -407,7 +411,7 @@ set_encrypted_link()
 {
     encrypted="$1"
 
-    while IFS=: read -r user _ uid _ _ home _; do 
+    while IFS=: read -r user x uid gid gname home terminal; do 
         if [[ "$uid" -ge "$uid_min" && "$uid" -le "$uid_max" ]]; then  
             # Make the home directory symlink point somewhere else
             point_to="$unencrypted_home/$user"
@@ -423,11 +427,11 @@ set_encrypted_link()
             fi
 
             ln -sf "$point_to" "$link_home"
-            
+
             # Make sure the symlink home is actually their home directory
             if [[ "$home" != "$link_home/$user" ]]; then 
-                usermod -d "$link_home/$user" "$user"
-            fi 
+                pkill -KILL -u "$user" && usermod -d "$link_home/$user" "$user"
+	          fi 
             
             # Now close all the programs
             pkill -KILL -u "$user"
@@ -443,8 +447,11 @@ case $1 in
         /sbin/systemctl start systemd-cryptsetup@*.service --all 
         
         if [[ $? -eq 0 ]]; then # check if it succeeded
-            mount -a
-            set_encrypted_link 1
+            /sbin/systemctl start mount-encrypted.service
+	   
+	          if [[ $? -eq 0 ]]; then
+	   	          set_encrypted_link 1
+	          fi
         fi
     ;;
     *)
