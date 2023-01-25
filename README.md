@@ -210,7 +210,7 @@ The symlink home:
   
 The unencrypted home:
 
-* `mkfs.btrfs  /dev/nvme0n1p9`
+* `mkfs.btrfs /dev/nvme0n1p9`
 * `btrfs filesystem label /dev/nvme0n1p9 unencrypted_home`
 
 The LUKS mappings:
@@ -242,9 +242,10 @@ nvme0n1                            57.6G
 ├─nvme0n1p5      rootfs               5G
 ├─nvme0n1p6      var                256M
 ├─nvme0n1p7      var                256M
-├─nvme0n1p8      crypt_home          45G
-│ └─crypt_home                       45G
-└─nvme0n1p9      unencrypted_home     2G
+├─nvme0n1p8      symlink_home         5M
+├─nvme0n1p9      unencrypted_home   2.5G
+└─nvme0n1p10     crypt_home        44.5G
+  └─crypt_home                     44.5G
 ```  
   
 As you can see, there are are two SteamOS partitions with the label 'var' and size of 256M: mount the first one.
@@ -276,7 +277,7 @@ drwxrwxrwt  2 root root  1.0K Jan 10 17:10 tmp
 drwxr-xr-x  4 root root  1.0K Jan 21 07:31 usr
 ```
  
-# Adding disks to crypttab and fstab
+# Making disks automatically mount
 
 The cryptsetup service checks for disks in crypttab, we can invoke this service later to get a handy passphrase prompt for all disks to decrypt. The cryptsetup service caches passphrases, so if multiple disks have the same one, you only need to enter it once. 
   
@@ -317,7 +318,7 @@ crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,dis
 crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,_netdev,nofail
 ```
   
-(_netdev was added as a workaround so that the entry won't block booting, but will still exist in the cryptsetup service)
+(_netdev was added so that the entry won't block booting, but will still exist in the cryptsetup service)
   
 #### `discard`
 The `discard` is there to enable TRIM support for the NVMe. This will make the dd operation we did meaningless with time, which will make it easier for attackers to know what parts of the disk has been free'd and such. You can remove it if you want, but just know that not having TRIM enabled for an SSD can alter performance while off and may decrease longevity of the drive. Your data will still be encrypted regardless.
@@ -327,21 +328,41 @@ After data has been written, you cannot undo exposure by simply disabling it, un
 ### Fstab
 Edit fstab: `nano /mnt/lib/overlays/etc/upper/fstab`
   
-First off, there is an existing line for /home: remove it.
+Replace the existing /home line with this:
+```
+UUID="dffb7598-17c2-4202-a92d-acd89b324f30" /home   ext4    defaults    0   2
+```
+
+### Mount service
+We can't add our encrypted partitions to fstab, because they will block booting. We are going to create a service for this instead.
  
+Make binary directory: `mkdir -p /mnt/usr/sbin`
+
+Service: `nano /mnt/lib/overlays/etc/upper/systemd/system/mount-encrypted.service`
+```service
+[Unit]
+Description=Mount encrypted devices
+
+[Service]
+Type=simple
+ExecStart=/var/usr/sbin/mount-encrypted-devices.sh
+
+[Install]
+WantedBy=multi-user.target
 ```
-UUID="dffb7598-17c2-4202-a92d-acd89b324f30"     /var/home_no_encryption btrfs   defaults,nofail,compress=zstd:15        0       2
-  
-/dev/mapper/crypt_home    /home   btrfs   defaults,noauto,nofail,compress=zstd:6  0       2
-/dev/mapper/crypt_sdcard  /mnt/sdcard     btrfs   defaults,noauto,nofail,compress=zstd:6  0       2  
+    
+Service script: `nano /mnt/usr/sbin/mount-encrypted-devices.sh`
+```bash
+#!/bin/bash  
+mount /dev/mapper/crypt_home /var/mnt/home
+mount /dev/mapper/crypt_sdcard /var/mnt/sdcard
 ```
-  
-Warning: **compress is a btrfs option**, if you're not using btrfs: remove it.
-  
-**The fstab entries will always fail** if the mount paths don't exist, so create them:
-* `mkdir /mnt/mnt/sdcard`
-* `mkdir /mnt/home_no_encryption`
-  
+    
+`chmod +x /mnt/usr/sbin/mount-encrypted-devices.sh`
+
+# Creating .steamos directories
+    
+    
 # Migrating to symlinked home directories
 
 The reason we are doing this is so that we can make use of both the *unencrypted* and *encrypted* home directory **without** conflicting with software.
@@ -357,8 +378,6 @@ All programs will be restarted after symlink changes to avoid conflicts, and the
 All users with a UID between 1001 and 1050 will have their home directories forced. This should skip the built-in user, and apply to the user you created manually as well as any other users you create manually in the future.
   
 ### Creation
-* `mkdir -p /mnt/usr/sbin`
-  
 * `nano /mnt/usr/sbin/home_links.sh`
 ```bash
 #!/bin/bash 
@@ -382,7 +401,7 @@ fi
 [[ ! "$uid_min" =~ [0-9]+ || ! "$uid_max" =~ [0-9]+ ]] && echo "uid_min and uid_max must be valid integers" && exit 1
 [[ "$uid_max" -le "$uid_min" ]] && echo "uid_max is less than or equal to uid_min" && exit 1
 
-mkdir -p "$link_home" 2> /dev/null
+# mkdir -p "$link_home" 2> /dev/null
   
 set_encrypted_link()
 {
