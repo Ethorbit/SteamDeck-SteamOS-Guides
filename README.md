@@ -384,12 +384,10 @@ This Steam install simply exists to decrypt the system every time you boot, you 
 Login using a throwaway Steam account (if you do not have one, create a new one). Since this partition is not encrypted, you don't want to login with anything you care about.
 
 ### Attempt decryption
-With your new account, go to the Desktop and open Konsole. There should be a LUKS password prompt as soon as it opens, enter the password.
-  
-If it works, your screen will go black for a few minutes like before, and another Steam Setup menu will appear. If your disposable account is not there, this means that you are now using the **encrypted** disks, and you can feel free to do whatever now.
+With your new account, go to the Desktop and open Konsole. There should be a LUKS password prompt. As soon as you enter the password, your screen should go black for a few minutes like before, and another Steam Setup menu will appear. This time, your disposable account should not exist, which means that you are now using the **encrypted** disks, and you can feel free to do whatever now.
   
 #### Adding Konsole as a non-steam game
-If you don't like having to switch to Desktop every time, you can bring Konsole into your Steam library too. 
+If you don't like having to switch to Desktop every time to decrypt, you can bring Konsole into your Steam library too. 
   
 * Go to the Desktop and open Steam. 
 * On the bottom left, click [+] Add A Game
