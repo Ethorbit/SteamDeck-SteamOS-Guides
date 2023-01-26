@@ -377,7 +377,7 @@ It is time to boot back into SteamOS: `shutdown -r now`
 If everything worked, the screen will be black for a few minutes and then a Steam setup menu should appear.
   
 ![Example](https://i.imgur.com/LpVYZiX.png)
-  
+	
 ### Create a disposable Steam account
 This Steam install simply exists to decrypt the system every time you boot, you will **not** use it to play games (the unencrypted partition only has enough space for the Steam install anyway)
   
@@ -396,3 +396,12 @@ If you don't like having to switch to Desktop every time, you can bring Konsole 
 * Click Add a Non-Steam Game
 * Find and select Konsole from the list
   
+# Troubleshooting
+
+### Unable to boot, nothing works, black screen
+If you experience lots of boot errors that pass really fast and then the screen stays black - Something's wrong with the unencrypted home partition. SteamOS actually creates and uses directories inside /home/.steamos/ as bind mountpoints for system directories, so the system simply won't work correctly without it.
+	
+If you didn't experience boot errors, this can mean that there is not enough space on the disk for the Steam setup (instead of it showing an error for that, it just stays at a black screen forever attempting to write files that it can't)
+	
+### Unable to login to Steam
+Do Power > Switch to Desktop, plug a mouse in and then login to Steam there. The reason I mention a mouse is because for some reason, the native Steam Deck controls do not fully work in Desktop mode until **after** a Steam account has been added.
