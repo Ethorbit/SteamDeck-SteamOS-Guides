@@ -145,7 +145,11 @@ Here in my case, we can see the Type "Linux Home" is partition # 8 (the largest 
 * Enter d and then enter the # of the home partition
 #### Unencrypted home
 * Enter n, press enter twice until it asks for "Last Sector"
-* For Last Sector, I will enter +10G. +10G means I'm giving 10 gibibytes of space for the unencrypted home partition, which will only need enough space for a Steam install. (at the time of writing, a Steam install is ~7.7G, but this could increase in the future.) You can change as you see fit. 
+* For Last Sector, I will enter +10G. +10G means I'm giving 10 gibibytes of space for the unencrypted home partition, which will only need enough space for a Steam install.
+	
+At the time of writing: A Steam install costs about ~7.7G of space, and the swapfile SteamOS creates costs 1G.
+I've chosen 10G to give a little head room, but I will also be applying aggressive compression with btrfs in later steps to help save even more space.
+
 #### Encrypted home
 * Enter n and press enter until it stops asking. This will be the encrypted home where you'll *actually* store files.
 * Enter p to check if your partitions look good. 
