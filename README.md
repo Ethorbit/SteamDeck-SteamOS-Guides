@@ -143,28 +143,23 @@ Here in my case, we can see the Type "Linux Home" is partition # 8 (the largest 
   
 * `fdisk /dev/nvme0n1` 
 * Enter d and then enter the # of the home partition
-#### Symlink home
-* Enter n, press enter twice until it asks for "Last Sector"
-* For Last Sector, enter +5M (It only contains a symlink for each user, 5 mebibytes should do.)
-* If it asks, enter Y to remove the signature
 #### Unencrypted home
-* Enter n and again, enter until "Last Sector"
-* For Last Sector, I will enter +2.5G. +2.5G means I'm giving 2.5 gibibytes of space for the unencrypted home partition, which will only need enough space for a Steam install. You can change as you see fit.
+* Enter n, press enter twice until it asks for "Last Sector"
+* For Last Sector, I will enter +10G. +10G means I'm giving 10 gibibytes of space for the unencrypted home partition, which will only need enough space for a Steam install. (at the time of writing, a Steam install is ~7.7G, but this could increase in the future.) You can change as you see fit. 
 #### Encrypted home
 * Enter n and press enter until it stops asking. This will be the encrypted home where you'll *actually* store files.
 * Enter p to check if your partitions look good. 
 ```
-Device             Start       End  Sectors  Size Type
-/dev/nvme0n1p1      2048    133119   131072   64M EFI System
-/dev/nvme0n1p2    133120    198655    65536   32M Microsoft basic data
-/dev/nvme0n1p3    198656    264191    65536   32M Microsoft basic data
-/dev/nvme0n1p4    264192  10749951 10485760    5G Linux root (x86-64)
-/dev/nvme0n1p5  10749952  21235711 10485760    5G Linux root (x86-64)
-/dev/nvme0n1p6  21235712  21759999   524288  256M Linux variable data
-/dev/nvme0n1p7  21760000  22284287   524288  256M Linux variable data
-/dev/nvme0n1p8  22284288  22294527    10240    5M Linux filesystem
-/dev/nvme0n1p9  22294528  27537407  5242880  2.5G Linux filesystem
-/dev/nvme0n1p10 27537408 120829951 93292544 44.5G Linux filesystem
+Device            Start       End  Sectors  Size Type
+/dev/nvme0n1p1     2048    133119   131072   64M EFI System
+/dev/nvme0n1p2   133120    198655    65536   32M Microsoft basic data
+/dev/nvme0n1p3   198656    264191    65536   32M Microsoft basic data
+/dev/nvme0n1p4   264192  10749951 10485760    5G Linux root (x86-64)
+/dev/nvme0n1p5 10749952  21235711 10485760    5G Linux root (x86-64)
+/dev/nvme0n1p6 21235712  21759999   524288  256M Linux variable data
+/dev/nvme0n1p7 21760000  22284287   524288  256M Linux variable data
+/dev/nvme0n1p8 22284288  43255807 20971520   10G Linux filesystem
+/dev/nvme0n1p9 43255808 120829951 77574144   37G Linux filesystem
 ```
   
 * Enter w to write changes
@@ -176,17 +171,17 @@ My /dev/mmcblk0p1 and /dev/nvme0n1p8 are the two partitions that need to be encr
 
 We will use cryptsetup luksFormat to setup encryption for them. 
 * `cryptsetup luksFormat /dev/mmcblk0p1`
-* `cryptsetup luksFormat /dev/nvme0n1p10`
+* `cryptsetup luksFormat /dev/nvme0n1p9`
   
 It will ask you to confirm YES and then to enter a secure, memorable password. If you forget this password, you're screwed. Keep backups of important files.
   
 This is optional, but you can also give them labels:
 * `cryptsetup config /dev/mmcblk0p1 --label crypt_sdcard`
-* `cryptsetup config /dev/nvme0n1p10 --label crypt_home`
+* `cryptsetup config /dev/nvme0n1p9 --label crypt_home`
   
 Next we will open them
 * `cryptsetup luksOpen /dev/mmcblk0p1 crypt_sdcard`
-* `cryptsetup luksOpen /dev/nvme0n1p10 crypt_home`
+* `cryptsetup luksOpen /dev/nvme0n1p9 crypt_home`
 
 We should never use them directly as they are now encrypted. The LUKS mappings (opened) devices are located at /dev/mapper/crypt_sdcard and /dev/mapper/crypt_home.
   
@@ -205,14 +200,10 @@ I will mostly be using the Btrfs filesystem since it supports transparent compre
 
 Note: *SteamOS's /home by default uses the ext4 filesystem (which is stable and fast), but missing the optional features mentioned.*
   
-The symlink home:
-* `mkfs.ext4 /dev/nvme0n1p8`
-* `e2label /dev/nvme0n1p8 symlink_home`
-  
 The unencrypted home:
 
-* `mkfs.btrfs /dev/nvme0n1p9`
-* `btrfs filesystem label /dev/nvme0n1p9 unencrypted_home`
+* `mkfs.btrfs /dev/nvme0n1p8`
+* `btrfs filesystem label /dev/nvme0n1p8 unencrypted_home`
 
 The LUKS mappings:
 
@@ -235,18 +226,17 @@ sdb                                57.8G
 mmcblk0                           477.5G
 └─mmcblk0p1      crypt_sdcard     477.5G
   └─crypt_sdcard                  477.5G
-nvme0n1                            57.6G
-├─nvme0n1p1      esp                 64M
-├─nvme0n1p2      efi                 32M
-├─nvme0n1p3      efi                 32M
-├─nvme0n1p4      rootfs               5G
-├─nvme0n1p5      rootfs               5G
-├─nvme0n1p6      var                256M
-├─nvme0n1p7      var                256M
-├─nvme0n1p8      symlink_home         5M
-├─nvme0n1p9      unencrypted_home   2.5G
-└─nvme0n1p10     crypt_home        44.5G
-  └─crypt_home                     44.5G
+nvme0n1                       57.6G
+├─nvme0n1p1 esp                 64M
+├─nvme0n1p2 efi                 32M
+├─nvme0n1p3 efi                 32M
+├─nvme0n1p4 rootfs               5G
+├─nvme0n1p5 rootfs               5G
+├─nvme0n1p6 var                256M
+├─nvme0n1p7 var                256M
+├─nvme0n1p8 unencrypted_home    10G
+└─nvme0n1p9 crypt_home          37G
+  └─crypt_home                     37G
 ```  
   
 As you can see, there are are two SteamOS partitions with the label 'var' and size of 256M: mount the first one.
@@ -297,17 +287,17 @@ sdb                                57.8G             disk
 mmcblk0                           477.5G             disk  
 └─mmcblk0p1      crypt_sdcard     477.5G crypto_LUKS part  c29abde6-8237-410e-a338-f808ff065c99
   └─crypt_sdcard                  477.5G btrfs       crypt 80c91f87-2164-4286-8c2e-6d317849b262
-nvme0n1                            57.6G             disk  
-├─nvme0n1p1      esp                 64M vfat        part  89B1-076D
-├─nvme0n1p2      efi                 32M vfat        part  89B1-BC90
-├─nvme0n1p3      efi                 32M vfat        part  89B2-685B
-├─nvme0n1p4      rootfs               5G btrfs       part  1fae9051-7984-45be-9600-865a94ad8808
-├─nvme0n1p5      rootfs               5G btrfs       part  4a39a236-7977-4eb7-8ea1-2a9c41ff7fee
-├─nvme0n1p6      var                256M ext4        part  c6e05ac9-5103-4808-9b5f-0d3de52a16e6
-├─nvme0n1p7      var                256M ext4        part  1041ad1e-13e1-4f86-ac15-fee153092189
-├─nvme0n1p8      crypt_home          45G crypto_LUKS part  b27f07a2-f2be-49b1-b769-c67d9ab2eb98
+nvme0n1                       57.6G             disk 
+├─nvme0n1p1 esp                 64M vfat        part 89B1-076D
+├─nvme0n1p2 efi                 32M vfat        part 89B1-BC90
+├─nvme0n1p3 efi                 32M vfat        part 89B2-685B
+├─nvme0n1p4 rootfs               5G btrfs       part 1fae9051-7984-45be-9600-865a94ad8808
+├─nvme0n1p5 rootfs               5G btrfs       part 4a39a236-7977-4eb7-8ea1-2a9c41ff7fee
+├─nvme0n1p6 var                256M ext4        part c6e05ac9-5103-4808-9b5f-0d3de52a16e6
+├─nvme0n1p7 var                256M ext4        part 1041ad1e-13e1-4f86-ac15-fee153092189
+├─nvme0n1p8 unencrypted_home    10G btrfs       part 39e8f2ac-b3f4-427d-8f3b-b3165612d232
+└─nvme0n1p9 crypt_home          37G crypto_LUKS part d5eaf671-f52d-4cf4-b912-2a66834ff1dc
 │ └─crypt_home                       45G btrfs       crypt 8694c03f-64e9-4601-bb97-f6cd4a3b3d5a
-└─nvme0n1p9      unencrypted_home     2G btrfs       part  dffb7598-17c2-4202-a92d-acd89b324f30
 ```
  
 As you can see, the partitions we encrypted appear with the type "crypto_LUKS". Your UUIDs will be different than mine, **do not use mine.**
@@ -329,161 +319,41 @@ Edit fstab: `nano /mnt/lib/overlays/etc/upper/fstab`
   
 Replace the existing /home line with this:
 ```
-# Symlinked home
-UUID="4332ebb6-534d-4dad-901c-7ca008b7d954"     /home   ext4    defaults        0       2
-
 # Unencrypted home
-UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /var/mnt/home_no_encryption     btrfs   defaults,compress=zstd:15       0       2
+UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /home     btrfs   defaults,force-compress=zstd:16       0       2
 ```
 	
-Note: **compress is a btrfs option**, remove it if you're not using btrfs.
+Note: **force-compress is a btrfs option**, remove it if you're not using btrfs.
 
-### Mount service
-We can't add our encrypted partitions to fstab, because they will block booting. We are going to create a service for this instead.
- 
-Make binary directory: `mkdir -p /mnt/usr/sbin`
-
-Service: `nano /mnt/lib/overlays/etc/upper/systemd/system/mount-encrypted.service`
-```service
-[Unit]
-Description=Mount encrypted devices
-
-[Service]
-Type=simple
-ExecStart=/var/usr/sbin/mount-encrypted-devices.sh
-
-[Install]
-WantedBy=multi-user.target
-```
-    
-Service script: `nano /mnt/usr/sbin/mount-encrypted-devices.sh`
+### Mount script: `nano /mnt/usr/sbin/mount-encrypted.sh`
 ```bash
 #!/bin/bash  
-mount /dev/mapper/crypt_home /var/mnt/home
+mount /dev/mapper/crypt_home /home
 mount /dev/mapper/crypt_sdcard /var/mnt/sdcard
 ```
     
-`chmod +x /mnt/usr/sbin/mount-encrypted-devices.sh`
+`chmod 755 /mnt/usr/sbin/mount-encrypted.sh`
+	
+This mount script's crypt_home entry should override the unencrypted home, so that when it's mounted, programs will write to the encrypted home rather than the unencrypted one.
 
-# Creating .steamos directories
-    
-    
-# Migrating to symlinked home directories
+# Creating decrypt script
 
-The reason we are doing this is so that we can make use of both the *unencrypted* and *encrypted* home directory **without** conflicting with software.
-  
 SteamOS treats user home directories kinda like system installs. When a user has an empty home directory, it displays an install prompt and downloads steam files with an eventual Login panel appearing.
-  
-### What will happen
-  
-Your home directory is going to be transformed into a symlink pointing to *another* directory. This *other* directory will be `/mnt/home_no_encryption` after booting, but after decrypting, it will be `/mnt/home`.
-  
-All programs will be restarted after symlink changes to avoid conflicts, and they should "just work" as if nothing odd happened. Your $HOME path will always point to the symlink as if it were a normal directory.
-  
-All users with a UID between 1001 and 1050 will have their home directories forced. This should skip the built-in user, and apply to the user you created manually as well as any other users you create manually in the future.
+
+The decrypt script will run the cryptsetup service. After a successful unlock, your mount script you created earlier will run and all programs by every user except root will be terminated. After the programs are relaunched, they will write to the encrypted directories instead, keeping all your data safe.
   
 ### Creation
-* `nano /mnt/usr/sbin/home_links.sh`
+* `nano /mnt/usr/sbin/decrypt.sh`
 ```bash
-#!/bin/bash 
-#
-# SteamOS encryption home link script
-# Decrypts LUKS disks, swaps home directories after successful decryption
-#
-readonly unencrypted_home="/var/mnt/home_no_encryption"
-readonly encrypted_home="/var/mnt/home"  
-readonly link_home="/home"
-readonly uid_min=1000
-readonly uid_max=1050
-
-if [ $(id -u) -ne 0 ]; then 
-   echo "You need root"
-   exit
-fi
-
-[[ ! -d "$encrypted_home" ]] && echo "Encrypted home mountpoint is missing. ($encrypted_home)" && exit 1
-[[ ! -d "$unencrypted_home" ]] && echo "Unencrypted home pointpoint is missing. ($unencrypted_home)" && exit 1
-[[ ! "$uid_min" =~ [0-9]+ || ! "$uid_max" =~ [0-9]+ ]] && echo "uid_min and uid_max must be valid integers" && exit 1
-[[ "$uid_max" -le "$uid_min" ]] && echo "uid_max is less than or equal to uid_min" && exit 1
-
-# mkdir -p "$link_home" 2> /dev/null
-  
-set_encrypted_link()
-{
-    encrypted="$1"
-
-    while IFS=: read -r user x uid gid gname home terminal; do 
-        if [[ "$uid" -ge "$uid_min" && "$uid" -le "$uid_max" ]]; then  
-            # Make the home directory symlink point somewhere else
-            point_to="$unencrypted_home/$user"
- 
-            if [[ "$encrypted" -eq 1 ]]; then
-                point_to="$encrypted_home/$user"
-            fi
-            
-            if [ ! -d "$point_to" ]; then 
-                mkdir "$point_to"
-                chown "$user":"$user" "$point_to"
-                chmod 700 "$point_to"
-            fi
-
-            ln -sf "$point_to" "$link_home"
-
-            # Make sure the symlink home is actually their home directory
-            if [[ "$home" != "$link_home/$user" ]]; then 
-                pkill -KILL -u "$user" && usermod -d "$link_home/$user" "$user"
-	          fi 
-            
-            # Now close all the programs
-            pkill -KILL -u "$user"
-        fi  
-    done < <(getent passwd)
-}
-  
-case $1 in 
-    --reset)
-        set_encrypted_link 0
-    ;;
-    --decrypt)
-        /sbin/systemctl start systemd-cryptsetup@*.service --all 
-        
-        if [[ $? -eq 0 ]]; then # check if it succeeded
-            /sbin/systemctl start mount-encrypted.service
-	   
-	          if [[ $? -eq 0 ]]; then
-	   	          set_encrypted_link 1
-	          fi
-        fi
-    ;;
-    *)
-        echo "--reset       Makes user homes point to the unencrypted home directory."
-        echo "--decrypt     Runs cryptsetup service to decrypt all LUKS devices, makes user homes point to the encrypted home directory upon success."
-    ;;
-esac
+# to be entered
 ```
-* `chmod +x /mnt/usr/sbin/home_links.sh`
+* `chmod 755 /mnt/usr/sbin/decrypt.sh`
 
 This is a root-only script. You won't be decrypting the system as root, so we will add a sudoer entry for the default user:
 
-`echo "deck ALL=(root) NOPASSWD: /var/usr/sbin/home_links.sh" >> /mnt/lib/overlays/etc/upper/sudoers`
+`echo "deck ALL=(root) NOPASSWD: /var/usr/sbin/decrypt.sh" >> /mnt/lib/overlays/etc/upper/sudoers`
 
 **If your username was changed from the default 'deck', make sure to change it there too.**
-
-We are also going to create a service which will run at boot to reset the links:
-* nano /mnt/lib/overlays/etc/upper/systemd/system/reset-home-links.service
-```bash
-[Service]
-Type=simple
-ExecStart=/var/usr/sbin/home_links.sh --reset
-Before=graphical.target
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Now we need to enable this service:
-
-`ln -s "/mnt/lib/overlays/etc/upper/systemd/system/reset-home-links.service" "/mnt/lib/overlays/etc/upper/systemd/system/multi-user.target.wants/reset-home-links.service"`
   
 We will want a decryption prompt as soon as we open terminal, so let's mount the unencrypted home directory and add the .bashrc:
 * `umount /mnt`
@@ -491,7 +361,7 @@ We will want a decryption prompt as soon as we open terminal, so let's mount the
 * `mkdir /mnt/deck`
 * `chown 1000:1000 /mnt/deck`
 * `chmod 700 /mnt/deck`
-* `echo "sudo /var/usr/sbin/home_links.sh --decrypt" > /mnt/deck/.bashrc`
+* `echo "sudo /var/usr/sbin/decrypt.sh" > /mnt/deck/.bashrc`
 * `chown 1000:1000 /mnt/deck/.bashrc`
   
 Again, make sure to use *your* device ID and replace 'deck' if your username is different. You can check if 1000 is the right UID with: `cat /mnt/lib/overlays/etc/upper/passwd | cut -d ":" -f 1,3`
