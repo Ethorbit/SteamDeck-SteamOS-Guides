@@ -36,6 +36,7 @@ For some reason, Valve has intentionally disabled TPM and dm_crypt. These are ne
 Enter these commands:
 * `echo "dm_crypt" | sudo tee /etc/modules-load.d/dm_crypt.conf`
 * `sudo sed -i "s/module_blacklist=tpm//" /etc/default/grub`
+* `sudo sed -i "s/rd.luks=0//" /etc/default/grub`
 * `sudo update-grub`
 
 # Adding verbosity to boot
