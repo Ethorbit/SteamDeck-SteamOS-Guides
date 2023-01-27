@@ -6,7 +6,7 @@ To make this all possible; Full Disk Encryption simply can't work. We will be en
 If you have any other custom partitions which SteamOS does not rely on to run, you can encrypt those as well.
 
 # ![warning-icon](https://i.imgur.com/ZWdfbEN.png) Warning
-**None of this is official**. I am not a developer for Valve. The method used here is very hacky, intended only for SteamOS and may not work in future releases. 
+**None of this is official**. I am not a developer for Valve. The method used here is hacky, intended only for SteamOS and may not work in future releases. 
 
 I'm not responsible for any damage or data loss.
 
@@ -309,10 +309,12 @@ As you can see, the partitions we encrypted appear with the type "crypto_LUKS". 
 ### Crypttab
 Edit crypttab: `nano /mnt/lib/overlays/etc/upper/crypttab` (**use the partition UUIDs**, not the LUKS mapping ones)
 ```
-crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,discard,noauto,nofail,noearly
-crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,noauto,nofail,noearly
+crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,discard,nofail,_netdev
+crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,nofail,_netdev
 ```
  
+(_netdev was added so that it doesn't block at boot, but also so that the cryptsetup generator still uses it)
+	
 #### `discard`
 The `discard` is there to enable TRIM support for the NVMe. This will make the dd operation we did meaningless with time, which will make it easier for attackers to know what parts of the disk has been free'd and such. You can remove it if you want, but just know that not having TRIM enabled for an SSD can alter performance while off and may decrease longevity of the drive. Your data will still be encrypted regardless.
   
