@@ -387,6 +387,11 @@ readonly mount_pass_script="/var/usr/sbin/crypt-mount-pass.sh"
 readonly unlock_key_script="/var/usr/sbin/crypt-unlock-key.sh"
 readonly mount_key_script="/var/usr/sbin/crypt-mount-key.sh"
 
+if [[ $(id -u) -ne 0 ]]; then 
+   echo "You need root"
+   exit
+fi
+
 if [[ ! -f "$unlock_pass_script" || ! -f "$unlock_key_script" ]]; then
     echo "The unlock pass or unlock key script is missing."
     exit
@@ -397,38 +402,49 @@ if [[ ! -f "$mount_pass_script" || ! -f "$mount_key_script" ]]; then
     exit
 fi
 
-if [[ $(id -u) -ne 0 ]]; then
-   echo "You need root"
-   exit
-fi
-
 "$unlock_pass_script"
-[[ $? -ne 0 ]] && exit $?
 
-# Unmount everything on /home before mounting our own stuff
-home_device=$(df /home | tail -1 | cut -d " " -f 1)
-for mount in $(grep "$home_device" /proc/mounts | cut -d " " -f 2); do
-fuser -k -m "$mount" # Kill processes using this mount
-    umount "$mount"
-done
+case $? in
+    0|5) # succeeded or mapper device already exists
+    ;;
+    *) # failure?
+      exit $?
+    ;;
+esac
 
-"$mount_pass_script"
-"$unlock_key_script"
-"$mount_key_script"
-
-# Kill everyone's processes so that they stop using
-# any potential old mounts.
-while read -r uid; do
-    if [[ "$uid" -ne 0 ]]; then
-        pkill -KILL -u "$uid"
-    fi
-done < <(getent passwd | cut -d ":" -f 3)
-
-# Restart services, so SteamOS can do its usual /home changes
-services=$(systemctl list-units --no-pager --plain --type=service --state running,enabled,exited | grep service | awk '{ print $1 }')
-for service in $services; do
-    /sbin/systemctl restart "$service"
-done
+if [[ "$1" = "proceed" ]]; then
+    home_device=$(df /home | tail -1 | cut -d " " -f 1) 
+    
+    # Kill any processes trying to write to /home
+    processes=$(lsof +f -- "$home_device" 2>&1 | awk 'NR>3 { print $2 }')
+    while read -r name pid _; do 
+        kill -9 "$pid" 
+    done < <(lsof +f -- "$home_device")
+    
+    # Unmount everything on /home
+    for mount in $(grep "$home_device" /proc/mounts | cut -d " " -f 2); do 
+        umount "$mount" 2> /dev/null
+    
+        if [[ $(grep "$mount" /proc/mounts) ]]; then
+    	   echo "Unmounting $mount failed, it will be lazily unmounted instead."
+            umount -l "$mount" 2> /dev/null
+        fi
+    done
+    
+    # Mount our encrypted stuff
+    "$mount_pass_script" > /tmp/wtf_pass_mount
+    "$unlock_key_script" > /tmp/wtf_key_unlock
+    "$mount_key_script" > /tmp/wtf_key_mount
+    
+    # Restart services, so SteamOS can do its usual /home changes
+    services=$(systemctl list-dependencies --no-pager --plain --type=service --state running,enabled,exited | tac | grep service | awk '{ print $1 }')
+    for service in $services; do
+        /sbin/systemctl restart "$service"
+    done
+else
+    cd /tmp
+    nohup "$0" proceed > /dev/null 2>&1
+fi
 ```
 * `chmod 0755 /mnt/usr/sbin/decrypt.sh`
 
@@ -444,7 +460,7 @@ We will want a decryption prompt as soon as we open terminal, so let's mount the
 * `mkdir /mnt/deck`
 * `chown 1000:1000 /mnt/deck`
 * `chmod 700 /mnt/deck`
-* `echo "sudo /var/usr/sbin/decrypt.sh" > /mnt/deck/.bashrc`
+* `echo "cd / && sudo /var/usr/sbin/decrypt.sh" > /mnt/deck/.bashrc`
 * `chown 1000:1000 /mnt/deck/.bashrc`
   
 Again, make sure to use *your* device ID and replace 'deck' if your username is different. You can check if 1000 is the right UID with: `cat /mnt/lib/overlays/etc/upper/passwd | cut -d ":" -f 1,3`
