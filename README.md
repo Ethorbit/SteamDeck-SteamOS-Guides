@@ -1,7 +1,7 @@
 # Steam Deck (SteamOS) LUKS Encryption
 This is a Steam Deck SteamOS guide for LUKS encryption which works with the on-screen keyboard and does not require a SteamOS reinstall. 
 
-To make this all possible; Full Disk Encryption simply can't work. We will be encrypting the SD card and /home instead, which will still protect your Steam logins, browser cookies, cache and other important user data. 
+To make this all possible: Full Disk Encryption simply can't work. We will be encrypting the SD card and /home instead, which will still protect your Steam logins, browser cookies, cache and other important user data. 
 
 If you have any other custom partitions which SteamOS does not rely on to run, you can encrypt those as well.
 
@@ -16,8 +16,6 @@ I'm not responsible for any damage or data loss.
 
 * A USB-C hub with USB ports which work in the Steam Deck, preferably with power pass-through support so that you can charge the deck as well (securely wiping disks takes a long time)
 * A USB flash drive with a Linux install(er) on it like [this](https://archlinux.org/download/), so you can access the SteamOS partitions from outside
-
-(While you technically could just do everything inside SteamOS; having an installer and hub will ensure that if a fuckup happens which prevents booting, you'll have full ability to restore the deck back to a working state. It will also ensure that SteamOS will not get in your way during encryption.)
 
 ![Example](https://i.imgur.com/W7EdVYn.png)
 
@@ -317,7 +315,9 @@ nvme0n1                       57.6G             disk
 ```
  
 As you can see, the partitions we encrypted appear with the type "crypto_LUKS". Your UUIDs will be different than mine, **do not use mine.**
- 
+
+Note: *I will be using an option called `force-compress=zstd:#`, **do not include it** unless you're also using btrfs*
+
 ### Fstab:
 `nano /mnt/lib/overlays/etc/upper/fstab`
 	
@@ -375,8 +375,6 @@ mount -o compress-force=zstd:6 /dev/mapper/crypt_sdcard /var/mnt/sdcard
 ```
 `chmod 0755 /mnt/usr/sbin/crypt-mount-key.sh`	
 	
-
-(**Remove the compress-force options from the scripts** if you're not using btrfs)
 	
 ### Creating decrypt script:
 `nano /mnt/usr/sbin/decrypt.sh`
