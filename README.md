@@ -196,23 +196,6 @@ The next thing we will do is securely wipe them. **This is a process that will t
   
 Normally, this operation would allocate the entire disk with zeroes, but since all writes to these devices are encrypted, these zeroes will also be encrypted. This makes it way harder for attackers to figure out which parts of the encrypted disks actually contain user data.
   
-### Keyfile 
-
-You probably won't want to have to enter a password multiple times, so we are going to create a keyfile which we will store inside the encrypted home partition and assign to everything else as their secondary keyslot. This means you'll only need to enter the home's password, and then you can unlock everything else automatically.
-
-First, we need to mount it:
-* `mkdir /tmp/home`
-* `mount /dev/mapper/crypt_home /tmp/home`
-
-Now we need to generate a key:
-* `openssl genrsa -out /tmp/home/unlockkey 4096`
-* `chmod 0400 /tmp/home/unlockkey`
-
-And lastly, we need to assign is as the second keyslot for other devices:
-* `cryptsetup luksAddKey /dev/mmcblk0p1 /tmp/home/unlockkey`
-
-`umount /tmp/home`
-
 # Making filesystems
 
 Use `mkfs` to make a filesystem for the partitions you created, so that you can actually mount and write to them later.
@@ -231,6 +214,23 @@ The LUKS mappings:
 * `mkfs.btrfs /dev/mapper/crypt_sdcard`
 * `mkfs.btrfs /dev/mapper/crypt_home`
   
+# Encryption Keyfile 
+
+You probably won't want to have to enter a password multiple times, so we are going to create a keyfile which we will store inside the encrypted home partition and assign to everything else as their secondary keyslot. This means you'll only need to enter the home's password, and then you can unlock everything else automatically.
+
+First, we need to mount the encrypted home:
+* `mkdir /tmp/home`
+* `mount /dev/mapper/crypt_home /tmp/home`
+
+Now we need to generate a key:
+* `openssl genrsa -out /tmp/home/unlockkey 4096`
+* `chmod 0400 /tmp/home/unlockkey`
+
+And lastly, we need to assign is as the second keyslot for other devices:
+* `cryptsetup luksAddKey /dev/mmcblk0p1 /tmp/home/unlockkey`
+
+`umount /tmp/home`	
+	
 # Mounting SteamOS /var partition
 
 So SteamOS's /var directory is **very** different than what you'd normally expect from a typical distro. Most of SteamOS runs on an immutable filesystem which is overriden each update, so the /var directory was repurposed to just be "the place" for the user to modify some parts of the system at. Because of this, we will be making pretty much all file changes on /var.
@@ -348,25 +348,48 @@ UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /home     btrfs   defaults,force
 	
 Note: **force-compress is a btrfs option**, remove it if you're not using btrfs.
 
-### Mount script: `nano /mnt/usr/sbin/mount-encrypted.sh`
+### Passphrase unlock script: 
+`nano /mnt/usr/sbin/crypt-unlock-pass.sh`
 ```bash
-#!/bin/bash  
-mount /dev/mapper/crypt_home /home
-mount /dev/mapper/crypt_sdcard /var/mnt/sdcard
-```
-    
-`chmod 755 /mnt/usr/sbin/mount-encrypted.sh`
+#!/bin/bash	
+/sbin/cryptsetup luksOpen \
+	/dev/disk/by-uuid/c29abde6-8237-410e-a338-f808ff065c99 \
+	crypt_home		
 	
-This mount script's crypt_home entry should override the unencrypted home, so that when it's mounted, programs will write to the encrypted home rather than the unencrypted one.
+```	
+`chmod 0751 /mnt/usr/sbin/crypt-unlock-pass.sh`
 
+### Passphrase mount script:
+`nano /mnt/usr/sbin/crypt-mount-pass.sh`
+```bash
+mount -o compress-force=zstd:7 /dev/mapper/crypt_home /home
+```
+`chmod 0755 /mnt/usr/sbin/crypt-mount-pass.sh`	
+	
+### Keyfile unlock script: 
+`nano /mnt/usr/sbin/crypt-unlock-key.sh`
+```bash
+#!/bin/bash
+/sbin/cryptsetup luksOpen \
+	/dev/disk/by-uuid/c29abde6-8237-410e-a338-f808ff065c99 \
+	--key-file /home/unlockkey \
+	crypt_sdcard
+	
+```
+`chmod 0751 /mnt/usr/sbin/crypt-unlock-key.sh`
+	
+### Keyfile mount script:
+`nano /mnt/usr/sbin/crypt-mount-key.sh`
+```bash
+mount -o compress-force=zstd:6 /dev/mapper/crypt_sdcard /var/mnt/sdcard
+```
+`chmod 0755 /mnt/usr/sbin/crypt-mount-key.sh`	
+	
+
+(Remove the compress-force options from the mount scripts if you're not using btrfs)
+	
 # Creating decrypt script
-
-SteamOS treats user home directories kinda like system installs. When a user has an empty home directory, it displays an install prompt and downloads steam files with an eventual Login panel appearing.
-
-The decrypt script will run the cryptsetup service. After a successful unlock, your mount script you created earlier will run and all programs by every user except root will be terminated. After the programs are relaunched, they will write to the encrypted directories instead, keeping all your data safe.
-  
-### Creation
-* `nano /mnt/usr/sbin/decrypt.sh`
+`nano /mnt/usr/sbin/decrypt.sh`
 ```bash
 # to be entered
 ```
