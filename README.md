@@ -174,8 +174,8 @@ My /dev/mmcblk0p1 and /dev/nvme0n1p8 are the two partitions that need to be encr
 ![warning-icon](https://i.imgur.com/ZWdfbEN.png) **Make sure you double check that the partitions you are about to encrypt are the ones YOU created**, these next actions have the potential to bork your whole SteamOS install (if passed the wrong partition(s).)
 
 We will use cryptsetup luksFormat to setup encryption for them. 
-* `cryptsetup luksFormat /dev/mmcblk0p1`
 * `cryptsetup luksFormat /dev/nvme0n1p9`
+* `cryptsetup luksFormat /dev/mmcblk0p1`
   
 It will ask you to confirm YES and then to enter a secure, memorable password. If you forget this password, you're screwed. Keep backups of important files.
   
@@ -196,6 +196,23 @@ The next thing we will do is securely wipe them. **This is a process that will t
   
 Normally, this operation would allocate the entire disk with zeroes, but since all writes to these devices are encrypted, these zeroes will also be encrypted. This makes it way harder for attackers to figure out which parts of the encrypted disks actually contain user data.
   
+### Keyfile 
+
+You probably won't want to have to enter a password multiple times, so we are going to create a keyfile which we will store inside the encrypted home partition and assign to everything else as their secondary keyslot. This means you'll only need to enter the home's password, and then you can unlock everything else automatically.
+
+First, we need to mount it:
+* `mkdir /tmp/home`
+* `mount /dev/mapper/crypt_home /tmp/home`
+
+Now we need to generate a key:
+* `openssl genrsa -out /tmp/home/unlockkey 4096`
+* `chmod 0400 /tmp/home/unlockkey`
+
+And lastly, we need to assign is as the second keyslot for other devices:
+* `cryptsetup luksAddKey /dev/mmcblk0p1 /tmp/home/unlockkey`
+
+`umount /tmp/home`
+
 # Making filesystems
 
 Use `mkfs` to make a filesystem for the partitions you created, so that you can actually mount and write to them later.
@@ -353,7 +370,7 @@ The decrypt script will run the cryptsetup service. After a successful unlock, y
 ```bash
 # to be entered
 ```
-* `chmod 755 /mnt/usr/sbin/decrypt.sh`
+* `chmod 0755 /mnt/usr/sbin/decrypt.sh`
 
 This is a root-only script. You won't be decrypting the system as root, so we will add a sudoer entry for the default user:
 
