@@ -214,7 +214,7 @@ The LUKS mappings:
 * `mkfs.btrfs /dev/mapper/crypt_sdcard`
 * `mkfs.btrfs /dev/mapper/crypt_home`
   
-# Encryption Keyfile 
+# LUKS Keyfile 
 
 You probably won't want to have to enter a password multiple times, so we are going to create a keyfile which we will store inside the encrypted home partition and assign to everything else as their secondary keyslot. This means you'll only need to enter the home's password, and then you can unlock everything else automatically.
 
