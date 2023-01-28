@@ -478,6 +478,7 @@ Login using a throwaway Steam account (if you do not have one, create a new one)
 ### Attempt decryption
 With your new account, go to the Desktop and open Konsole. There should be a LUKS password prompt. As soon as you enter the password, your screen should go black for a few minutes like before, and another Steam Setup menu will appear. This time, your disposable account should not exist, which means that you are now using the **encrypted** disks, and you can feel free to do whatever now.
   
+	
 #### Adding Konsole as a non-steam game
 If you don't like having to switch to Desktop every time to decrypt, you can bring Konsole into your Steam library too. 
   
@@ -500,5 +501,5 @@ If you didn't experience boot errors, this can instead mean that there is not en
 ### Unable to login to Steam
 Do Power > Switch to Desktop, plug a mouse in and then login to Steam there. The reason I mention a mouse is because for some reason, the native Steam Deck controls do not fully work in Desktop mode until **after** a Steam account has been added.
 
-### My custom mounts are not showing up in Steam
+### Custom mounts are not showing up in Steam
 Add it in Desktop mode, then it'll show in Big Picture.
