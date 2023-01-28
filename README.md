@@ -26,7 +26,7 @@ I'm not responsible for any damage or data loss.
 * Press the Steam button > Power and Switch to Desktop. 
 * Find and open Konsole. 
 
-If you haven't already set a password: type `passwd` to do so.
+If you haven't already set a password, type `passwd` to do so.
 
 
 # Enabling TPM and dm_crypt
