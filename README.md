@@ -289,12 +289,8 @@ drwxrwxrwt  2 root root  1.0K Jan 10 17:10 tmp
 drwxr-xr-x  4 root root  1.0K Jan 21 07:31 usr
 ```
  
-# Making disks automatically mount
+# Fstab
 
-The cryptsetup service checks for disks in crypttab, we can invoke this service later to get a handy passphrase prompt for all disks to decrypt. The cryptsetup service caches passphrases, so if multiple disks have the same one, you only need to enter it once. 
-  
-If we add the LUKS mapping paths to fstab, we can automatically mount them after decrypting the partitions.
-  
 Instead of referencing the device names, we will be using their UUIDs. You can view the UUID of every disk by entering: `lsblk -o name,label,size,fstype,type,uuid`
 ```
 root@archiso ~ # lsblk -o name,label,size,fstype,type,uuid
@@ -322,46 +318,36 @@ nvme0n1                       57.6G             disk
 ```
  
 As you can see, the partitions we encrypted appear with the type "crypto_LUKS". Your UUIDs will be different than mine, **do not use mine.**
-  
-### Crypttab
-Edit crypttab: `nano /mnt/lib/overlays/etc/upper/crypttab` (**use the partition UUIDs**, not the LUKS mapping ones)
-```
-crypt_home      UUID="b27f07a2-f2be-49b1-b769-c67d9ab2eb98"     none    luks,discard,nofail,_netdev
-crypt_sdcard    UUID="c29abde6-8237-410e-a338-f808ff065c99"     none    luks,nofail,_netdev
-```
  
-(_netdev was added so that it doesn't block at boot, but also so that the cryptsetup generator still uses it)
+### Fstab:
+`nano /mnt/lib/overlays/etc/upper/fstab`
 	
-#### `discard`
-The `discard` is there to enable TRIM support for the NVMe. This will make the dd operation we did meaningless with time, which will make it easier for attackers to know what parts of the disk has been free'd and such. You can remove it if you want, but just know that not having TRIM enabled for an SSD can alter performance while off and may decrease longevity of the drive. Your data will still be encrypted regardless.
-  
-After data has been written, you cannot undo exposure by simply disabling it, unless the device is erased again.
-
-### Fstab
-Edit fstab: `nano /mnt/lib/overlays/etc/upper/fstab`
-  
 Replace the existing /home line with this:
-```
+```bash
 # Unencrypted home
 UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /home     btrfs   defaults,force-compress=zstd:16       0       2
 ```
 	
-Note: **force-compress is a btrfs option**, remove it if you're not using btrfs.
-
 ### Passphrase unlock script: 
 `nano /mnt/usr/sbin/crypt-unlock-pass.sh`
 ```bash
 #!/bin/bash	
 /sbin/cryptsetup luksOpen \
+	--allow-discards \
 	/dev/disk/by-uuid/c29abde6-8237-410e-a338-f808ff065c99 \
 	crypt_home		
 	
 ```	
 `chmod 0751 /mnt/usr/sbin/crypt-unlock-pass.sh`
+	
+The `--allow-discards` is there to enable TRIM support for the NVMe. This will make the dd operation we did meaningless with time, which will make it easier for attackers to know what parts of the disk has been free'd and such. You can remove it if you want, but just know that not having TRIM enabled for an SSD can alter performance while off and may decrease longevity of the drive. Your data will still be encrypted regardless.
+  
+After data has been written, you cannot undo exposure by simply removing it, unless the device is erased again.
 
 ### Passphrase mount script:
 `nano /mnt/usr/sbin/crypt-mount-pass.sh`
 ```bash
+#!/bin/bash
 mount -o compress-force=zstd:7 /dev/mapper/crypt_home /home
 ```
 `chmod 0755 /mnt/usr/sbin/crypt-mount-pass.sh`	
@@ -371,8 +357,8 @@ mount -o compress-force=zstd:7 /dev/mapper/crypt_home /home
 ```bash
 #!/bin/bash
 /sbin/cryptsetup luksOpen \
-	/dev/disk/by-uuid/c29abde6-8237-410e-a338-f808ff065c99 \
 	--key-file /home/unlockkey \
+	/dev/disk/by-uuid/c29abde6-8237-410e-a338-f808ff065c99 \
 	crypt_sdcard
 	
 ```
@@ -381,17 +367,65 @@ mount -o compress-force=zstd:7 /dev/mapper/crypt_home /home
 ### Keyfile mount script:
 `nano /mnt/usr/sbin/crypt-mount-key.sh`
 ```bash
+#!/bin/bash
 mount -o compress-force=zstd:6 /dev/mapper/crypt_sdcard /var/mnt/sdcard
 ```
 `chmod 0755 /mnt/usr/sbin/crypt-mount-key.sh`	
 	
 
-(Remove the compress-force options from the mount scripts if you're not using btrfs)
+(**Remove the compress-force options from the scripts** if you're not using btrfs)
 	
-# Creating decrypt script
+### Creating decrypt script:
 `nano /mnt/usr/sbin/decrypt.sh`
 ```bash
-# to be entered
+#!/bin/bash
+readonly unlock_pass_script="/var/usr/sbin/crypt-unlock-pass.sh"
+readonly mount_pass_script="/var/usr/sbin/crypt-mount-pass.sh"
+readonly unlock_key_script="/var/usr/sbin/crypt-unlock-key.sh"
+readonly mount_key_script="/var/usr/sbin/crypt-mount-key.sh"
+
+if [[ ! -f "$unlock_pass_script" || ! -f "$unlock_key_script" ]]; then
+    echo "The unlock pass or unlock key script is missing."
+    exit
+fi
+
+if [[ ! -f "$mount_pass_script" || ! -f "$mount_key_script" ]]; then
+    echo "The mount pass or mount key script is missing"
+    exit
+fi
+
+if [[ $(id -u) -ne 0 ]]; then
+   echo "You need root"
+   exit
+fi
+
+"$unlock_pass_script"
+[[ $? -ne 0 ]] && exit $?
+
+# Unmount everything on /home before mounting our own stuff
+home_device=$(df /home | tail -1 | cut -d " " -f 1)
+for mount in $(grep "$home_device" /proc/mounts | cut -d " " -f 2); do
+fuser -k -m "$mount" # Kill processes using this mount
+    umount "$mount"
+done
+
+"$mount_pass_script"
+"$unlock_key_script"
+"$mount_key_script"
+
+# Kill everyone's processes so that they stop using
+# any potential old mounts.
+while read -r uid; do
+    if [[ "$uid" -ne 0 ]]; then
+        pkill -KILL -u "$uid"
+    fi
+done < <(getent passwd | cut -d ":" -f 3)
+
+# Restart services, so SteamOS can do its usual /home changes
+services=$(systemctl list-units --no-pager --plain --type=service --state running,enabled,exited | grep service | awk '{ print $1 }')
+for service in $services; do
+    /sbin/systemctl restart "$service"
+done
 ```
 * `chmod 0755 /mnt/usr/sbin/decrypt.sh`
 
