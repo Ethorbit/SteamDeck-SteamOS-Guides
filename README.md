@@ -169,7 +169,7 @@ Device            Start       End  Sectors  Size Type
 * Enter w to write changes
   
 # Encrypting
-My /dev/mmcblk0p1 and /dev/nvme0n1p8 are the two partitions that need to be encrypted.
+My /dev/mmcblk0p1 and /dev/nvme0n1p9 are the two partitions that need to be encrypted.
   
 ![warning-icon](https://i.imgur.com/ZWdfbEN.png) **Make sure you double check that the partitions you are about to encrypt are the ones YOU created**, these next actions have the potential to bork your whole SteamOS install (if passed the wrong partition(s).)
 
@@ -416,7 +416,6 @@ if [[ "$1" = "proceed" ]]; then
     home_device=$(df /home | tail -1 | cut -d " " -f 1) 
     
     # Kill any processes trying to write to /home
-    processes=$(lsof +f -- "$home_device" 2>&1 | awk 'NR>3 { print $2 }')
     while read -r name pid _; do 
         kill -9 "$pid" 
     done < <(lsof +f -- "$home_device")
@@ -432,9 +431,9 @@ if [[ "$1" = "proceed" ]]; then
     done
     
     # Mount our encrypted stuff
-    "$mount_pass_script" > /tmp/wtf_pass_mount
-    "$unlock_key_script" > /tmp/wtf_key_unlock
-    "$mount_key_script" > /tmp/wtf_key_mount
+    "$mount_pass_script"
+    "$unlock_key_script"
+    "$mount_key_script"
     
     # Restart services, so SteamOS can do its usual /home changes
     services=$(systemctl list-dependencies --no-pager --plain --type=service --state running,enabled,exited | tac | grep service | awk '{ print $1 }')
