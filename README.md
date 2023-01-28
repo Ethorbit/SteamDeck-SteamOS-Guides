@@ -499,3 +499,6 @@ If you didn't experience boot errors, this can instead mean that there is not en
 	
 ### Unable to login to Steam
 Do Power > Switch to Desktop, plug a mouse in and then login to Steam there. The reason I mention a mouse is because for some reason, the native Steam Deck controls do not fully work in Desktop mode until **after** a Steam account has been added.
+
+### My custom mounts are not showing up in Steam
+Add it in Desktop mode, then it'll show in Big Picture.
