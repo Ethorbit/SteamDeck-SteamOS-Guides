@@ -6,7 +6,7 @@ To make this all possible; Full Disk Encryption simply can't work. We will be en
 If you have any other custom partitions which SteamOS does not rely on to run, you can encrypt those as well.
 
 # ![warning-icon](https://i.imgur.com/ZWdfbEN.png) Warning
-**None of this is official**. I am not a developer for Valve. The method used here is hacky, intended only for SteamOS and may not work in future releases. 
+**None of this is official**. The method used here is hacky, intended only for SteamOS and may not work in future releases. 
 
 I'm not responsible for any damage or data loss.
 
@@ -219,17 +219,16 @@ The LUKS mappings:
 You probably won't want to have to enter a password multiple times, so we are going to create a keyfile which we will store inside the encrypted home partition and assign to everything else as their secondary keyslot. This means you'll only need to enter the home's password, and then you can unlock everything else automatically.
 
 First, we need to mount the encrypted home:
-* `mkdir /tmp/home`
-* `mount /dev/mapper/crypt_home /tmp/home`
+* `mount /dev/mapper/crypt_home /mnt`
 
 Now we need to generate a key:
-* `openssl genrsa -out /tmp/home/unlockkey 4096`
-* `chmod 0400 /tmp/home/unlockkey`
+* `openssl genrsa -out /mnt/unlockkey 4096`
+* `chmod 0400 /mnt/unlockkey`
 
 And lastly, we need to assign is as the second keyslot for other devices:
-* `cryptsetup luksAddKey /dev/mmcblk0p1 /tmp/home/unlockkey`
+* `cryptsetup luksAddKey /dev/mmcblk0p1 /mnt/unlockkey`
 
-`umount /tmp/home`	
+`umount /mnt`	
 	
 # Mounting SteamOS /var partition
 
@@ -289,7 +288,7 @@ drwxrwxrwt  2 root root  1.0K Jan 10 17:10 tmp
 drwxr-xr-x  4 root root  1.0K Jan 21 07:31 usr
 ```
  
-# Fstab
+# Setting up Mounting / Unlocking
 
 Instead of referencing the device names, we will be using their UUIDs. You can view the UUID of every disk by entering: `lsblk -o name,label,size,fstype,type,uuid`
 ```
