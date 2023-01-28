@@ -331,6 +331,7 @@ UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /home     btrfs   defaults,force
 `nano /mnt/usr/sbin/crypt-unlock-pass.sh`
 ```bash
 #!/bin/bash	
+# Unlock LUKS devices using passphrases
 /sbin/cryptsetup luksOpen \
 	--allow-discards \
 	/dev/disk/by-uuid/d5eaf671-f52d-4cf4-b912-2a66834ff1dc \
@@ -347,6 +348,7 @@ After data has been written, you cannot undo exposure by simply removing it, unl
 `nano /mnt/usr/sbin/crypt-mount-pass.sh`
 ```bash
 #!/bin/bash
+# Mount LUKS devices which were unlocked by a passphrase
 mount -o compress-force=zstd:7 /dev/mapper/crypt_home /home
 ```
 `chmod 0755 /mnt/usr/sbin/crypt-mount-pass.sh`	
@@ -355,6 +357,7 @@ mount -o compress-force=zstd:7 /dev/mapper/crypt_home /home
 `nano /mnt/usr/sbin/crypt-unlock-key.sh`
 ```bash
 #!/bin/bash
+# Unlock LUKS devices using keyfiles
 /sbin/cryptsetup luksOpen \
 	--key-file /home/unlockkey \
 	/dev/disk/by-uuid/c29abde6-8237-410e-a338-f808ff065c99 \
@@ -367,6 +370,7 @@ mount -o compress-force=zstd:7 /dev/mapper/crypt_home /home
 `nano /mnt/usr/sbin/crypt-mount-key.sh`
 ```bash
 #!/bin/bash
+# Mount LUKS devices which were unlocked by a keyfile
 mount -o compress-force=zstd:6 /dev/mapper/crypt_sdcard /var/mnt/sdcard
 ```
 `chmod 0755 /mnt/usr/sbin/crypt-mount-key.sh`	
