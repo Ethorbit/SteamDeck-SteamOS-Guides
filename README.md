@@ -335,7 +335,7 @@ UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /home     btrfs   defaults,force
 /sbin/cryptsetup luksOpen \
 	--allow-discards \
 	/dev/disk/by-uuid/d5eaf671-f52d-4cf4-b912-2a66834ff1dc \
-	crypt_home		
+	crypt_home
 	
 ```	
 `chmod 0751 /mnt/usr/sbin/crypt-unlock-pass.sh`
@@ -357,11 +357,11 @@ mount -o compress-force=zstd:7 /dev/mapper/crypt_home /home
 `nano /mnt/usr/sbin/crypt-unlock-key.sh`
 ```bash
 #!/bin/bash
-# Unlock LUKS devices using keyfiles
+# Unlock LUKS devices using the keyfiles
 /sbin/cryptsetup luksOpen \
-	--key-file /home/unlockkey \
-	/dev/disk/by-uuid/c29abde6-8237-410e-a338-f808ff065c99 \
-	crypt_sdcard
+        /dev/disk/by-uuid/c29abde6-8237-410e-a338-f808ff065c99 \
+        --key-file /home/unlockkey \
+        crypt_sdcard
 	
 ```
 `chmod 0751 /mnt/usr/sbin/crypt-unlock-key.sh`
