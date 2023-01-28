@@ -225,7 +225,7 @@ Now we need to generate a key:
 * `openssl genrsa -out /mnt/unlockkey 4096`
 * `chmod 0400 /mnt/unlockkey`
 
-And lastly, we need to assign is as the second keyslot for other devices:
+And lastly, we need to assign it as the second keyslot for other devices:
 * `cryptsetup luksAddKey /dev/mmcblk0p1 /mnt/unlockkey`
 
 `umount /mnt`	
@@ -333,7 +333,7 @@ UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /home     btrfs   defaults,force
 #!/bin/bash	
 /sbin/cryptsetup luksOpen \
 	--allow-discards \
-	/dev/disk/by-uuid/c29abde6-8237-410e-a338-f808ff065c99 \
+	/dev/disk/by-uuid/d5eaf671-f52d-4cf4-b912-2a66834ff1dc \
 	crypt_home		
 	
 ```	
