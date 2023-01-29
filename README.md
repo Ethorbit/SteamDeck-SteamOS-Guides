@@ -499,7 +499,7 @@ Your home partitions will always show, but you will need to do this for anything
 * Click "Steam Library Folders"
 * Click the (+) and add the custom mount location(s).
 	
-# Troubleshooting
+## Troubleshooting
 
 ### Unable to boot, nothing works, black screen
 If you experience lots of boot errors that pass really fast and then the screen stays black - Something's wrong with the unencrypted home partition. SteamOS actually creates and uses directories inside /home/.steamos/ as bind mountpoints for system directories, so the system simply won't work correctly without it.
