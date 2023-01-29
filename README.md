@@ -482,6 +482,7 @@ With your new account, go to the Desktop and open Konsole. There should be a LUK
 #### Adding Konsole as a non-steam game
 If you don't like having to switch to Desktop every time to decrypt, you can bring Konsole into your Steam library too. 
   
+* Restart deck to get back to the decryption user.
 * Go to the Desktop and open Steam. 
 * On the bottom left, click [+] Add A Game
 * Click Add a Non-Steam Game
