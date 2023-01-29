@@ -505,7 +505,7 @@ Your home partitions will always show, but you will need to do this for anything
 ### Unable to boot, nothing works, black screen
 If you experience lots of boot errors that pass really fast and then the screen stays black - Something's wrong with the unencrypted home partition. SteamOS actually creates and uses directories inside /home/.steamos/ as bind mountpoints for system directories, so the system simply won't work correctly without it.
 	
-If you didn't experience boot errors, this can instead mean that there is not enough space on the disk for the Steam setup. If that's the case, you'll need to sadly re-configure everything related to disks to give the unencrypted home more space.
+If you didn't experience boot errors, this can instead mean that the disk has run out of space before the install could finish. If that's the case, you'll need to sadly re-configure everything related to disks to give the unencrypted home more space.
 	
 ### Unable to login to Steam
 Do it in Desktop mode. Native controls may not work fully until *after* an account has been added, so plug a mouse in.
