@@ -499,7 +499,7 @@ If you experience lots of boot errors that pass really fast and then the screen 
 If you didn't experience boot errors, this can instead mean that there is not enough space on the disk for the Steam setup. If that's the case, you'll need to sadly re-configure everything related to disks to give the unencrypted home more space.
 	
 ### Unable to login to Steam
-Do Power > Switch to Desktop, plug a mouse in and then login to Steam there. The reason I mention a mouse is because for some reason, the native Steam Deck controls do not fully work in Desktop mode until **after** a Steam account has been added.
+Do it in Desktop mode. Native controls may not work fully until *after* an account has been added, so plug a mouse in.
 
 ### Custom mounts are not showing up in Steam
 Add it in Desktop mode, then it'll show in Big Picture.
