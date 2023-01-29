@@ -491,6 +491,14 @@ If you don't like having to switch to Desktop every time to decrypt, you can bri
 * Under Launch Options, add: `--fullscreen`
 * Test if it works
 	
+#### Adding your mounts to Steam
+Your home partitions will always show, but you will need to do this for anything else:
+* Go to the Desktop and open Steam.
+* On the top left, click Steam > settings
+* Click Downloads
+* Click "Steam Library Folders"
+* Click the (+) and add the custom mount location(s).
+	
 # Troubleshooting
 
 ### Unable to boot, nothing works, black screen
@@ -500,6 +508,3 @@ If you didn't experience boot errors, this can instead mean that there is not en
 	
 ### Unable to login to Steam
 Do it in Desktop mode. Native controls may not work fully until *after* an account has been added, so plug a mouse in.
-
-### Custom mounts are not showing up in Steam
-Add it in Desktop mode, then it'll show in Big Picture.
