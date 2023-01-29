@@ -171,7 +171,7 @@ My /dev/mmcblk0p1 and /dev/nvme0n1p9 are the two partitions that need to be encr
   
 ![warning-icon](https://i.imgur.com/ZWdfbEN.png) **Make sure you double check that the partitions you are about to encrypt are the ones YOU created**, these next actions have the potential to bork your whole SteamOS install (if passed the wrong partition(s).)
 
-We will use cryptsetup luksFormat to setup encryption for them. 
+Setup encryption for them:
 * `cryptsetup luksFormat /dev/nvme0n1p9`
 * `cryptsetup luksFormat /dev/mmcblk0p1`
   
@@ -181,7 +181,7 @@ This is optional, but you can also give them labels:
 * `cryptsetup config /dev/mmcblk0p1 --label crypt_sdcard`
 * `cryptsetup config /dev/nvme0n1p9 --label crypt_home`
   
-Next we will open them
+Next we will open them:
 * `cryptsetup luksOpen /dev/mmcblk0p1 crypt_sdcard`
 * `cryptsetup luksOpen /dev/nvme0n1p9 crypt_home`
 
