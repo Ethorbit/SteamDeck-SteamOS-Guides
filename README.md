@@ -508,4 +508,4 @@ If you experience lots of boot errors that pass really fast and then the screen 
 If you didn't experience boot errors, this can instead mean that the disk has run out of space before the install could finish. If that's the case, you'll need to sadly re-configure everything related to disks to give the unencrypted home more space.
 	
 ### Unable to login to Steam
-Do it in Desktop mode. Native controls may not work fully until *after* an account has been added, so plug a mouse in.
+Do it in Desktop mode. Native controls may not work fully until *after* an account has been added.
