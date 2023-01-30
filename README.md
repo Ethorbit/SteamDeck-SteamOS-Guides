@@ -5,7 +5,7 @@ To make this all possible: Full Disk Encryption simply can't work. We will be en
 
 If you have any other custom partitions which SteamOS does not rely on to run, you can encrypt those as well.
 
-[![Video Tutorial](https://i.imgur.com/liJBoOr.png)](https://www.youtube.com/watch?v=2_Pkv4tr8Ho)
+[![Video Tutorial](https://i.imgur.com/liJBoOr.png)](https://youtu.be/B8CV6EAB0-k)
 
 # ![warning-icon](https://i.imgur.com/ZWdfbEN.png) Warning
 **None of this is official**. The method used here is hacky, intended only for SteamOS and may not work in future releases. 
