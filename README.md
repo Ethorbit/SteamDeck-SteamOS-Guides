@@ -374,6 +374,8 @@ swapon /var/swap/swapfile
 If you are using btrfs like me, we should create its swap mountpoint:
 `mkdir /mnt/swap`
 	
+If you are not, remove the swap lines.
+	
 ### Keyfile unlock script: 
 `nano /mnt/usr/sbin/crypt-unlock-key.sh`
 ```bash
