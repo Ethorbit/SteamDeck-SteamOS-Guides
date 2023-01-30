@@ -213,6 +213,20 @@ The LUKS mappings:
 
 * `mkfs.btrfs /dev/mapper/crypt_sdcard`
 * `mkfs.btrfs /dev/mapper/crypt_home`
+	
+### If you chose btrfs for crypt_home:
+SteamOS's /home/swapfile will not work with btrfs, we'll have to create our own subvolumes and swapfile to get swap working.
+* `mount /dev/mapper/crypt_home /mnt`
+* `btrfs sub create /mnt/@home`
+* `btrfs sub create /mnt/@swap`
+* `umount /mnt`
+* `mount -o subvol=@swap /dev/mapper/crypt_home /mnt`
+* `touch /mnt/swapfile`
+* `chmod 600 /mnt/swapfile`
+* `chattr +C /mnt/swapfile`
+* `dd if=/dev/zero of=/mnt/swapfile bs=1M count=1024`
+* `mkswap /mnt/swapfile`
+* `umount /mnt`
   
 # Adding Keyfile 
 
@@ -318,7 +332,7 @@ nvme0n1                       57.6G             disk
  
 As you can see, the partitions we encrypted appear with the type "crypto_LUKS". Your UUIDs will be different than mine, **do not use mine.**
 
-Note: *I will be using an option called `force-compress=zstd:#`, **do not include it** unless you're also using btrfs*
+Note: *I will be using options called `subvol=name` and `force-compress=zstd:#`, **do not include them** unless you're also using btrfs*
 
 ### Fstab:
 `nano /mnt/lib/overlays/etc/upper/fstab`
@@ -351,9 +365,14 @@ After data has been written, you cannot undo exposure by simply removing it, unl
 ```bash
 #!/bin/bash
 # Mount LUKS devices which were unlocked by a passphrase
-mount -o compress-force=zstd:7 /dev/mapper/crypt_home /home
+mount -o subvol=@home,compress-force=zstd:7 /dev/mapper/crypt_home /home
+mount -o subvol=@swap /dev/mapper/crypt_home /var/swap
+swapon /var/swap/swapfile
 ```
 `chmod 0755 /mnt/usr/sbin/crypt-mount-pass.sh`	
+	
+If you are using btrfs like me, we should create its swap mountpoint:
+`mkdir /mnt/swap`
 	
 ### Keyfile unlock script: 
 `nano /mnt/usr/sbin/crypt-unlock-key.sh`
