@@ -413,15 +413,13 @@ if [[ $(id -u) -ne 0 ]]; then
    exit
 fi
 
-if [[ ! -f "$unlock_pass_script" || ! -f "$unlock_key_script" ]]; then
-    echo "The unlock pass or unlock key script is missing."
-    exit
-fi
-
-if [[ ! -f "$mount_pass_script" || ! -f "$mount_key_script" ]]; then
-    echo "The mount pass or mount key script is missing"
-    exit
-fi
+for file in "$unlock_pass_script" "$mount_pass_script" \
+	"$unlock_key_script" "$mount_key_script"; do
+    if [[ ! -f "$file" ]]; then 
+        echo "$file is missing."
+        exit
+    fi
+done
 
 "$unlock_pass_script"
 
@@ -440,8 +438,9 @@ if [[ "$1" = "proceed" ]]; then
     while read -r name pid _; do 
         kill -9 "$pid" 
     done < <(lsof +f -- "$home_device")
-    
+
     # Unmount everything on /home
+    swapoff /home/swapfile 2> /dev/null
     for mount in $(grep "$home_device" /proc/mounts | cut -d " " -f 2); do 
         umount "$mount" 2> /dev/null
     
@@ -457,9 +456,16 @@ if [[ "$1" = "proceed" ]]; then
     "$mount_key_script"
     
     # Restart services, so SteamOS can do its usual /home changes
-    services=$(systemctl list-dependencies --no-pager --plain --type=service --state running,enabled,exited | tac | grep service | awk '{ print $1 }')
+    services=$(systemctl list-dependencies --no-pager --plain --state running,enabled,exited \
+	   | grep -E '.(service|mount)$' | tac | awk '{ print $1 }')
     for service in $services; do
-        /sbin/systemctl restart "$service"
+	case $service in
+            home.mount)
+            ;;
+            *)
+              systemctl restart "$service" &
+            ;;
+        esac
     done
 else
     cd /tmp
