@@ -200,7 +200,7 @@ Normally, this operation would allocate the entire disk with zeroes, but since a
 
 Use `mkfs` to make a filesystem for the partitions you created, so that you can actually mount and write to them later.
 
-I will mostly be using the Btrfs filesystem since it supports transparent compression, subvolumes, deduplication, snapshotting, and more. The compression specifically is useful, because it will help save space with no effort.
+I will be using the Btrfs filesystem since it supports transparent compression, subvolumes, deduplication, snapshotting, and more. The compression specifically is useful, because it will help save space on game installs with no effort.
 
 Note: *SteamOS's /home by default uses the ext4 filesystem (which is stable and fast), but missing the optional features mentioned.*
   
