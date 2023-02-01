@@ -541,7 +541,7 @@ If you didn't experience boot errors, this can instead mean that the unencrypted
 ### Unable to login to Steam
 Do it in Desktop mode. Native controls may not work fully until *after* an account has been added.
 
-### I'm getting permission errors
+### Permission errors
 If SteamOS didn't do it, make sure /var/tmp is accessible to everyone after decrypting:
 * sudo chmod 777 /var/tmp
 
