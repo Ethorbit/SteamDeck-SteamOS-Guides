@@ -543,5 +543,5 @@ Do it in Desktop mode. Native controls may not work fully until *after* an accou
 
 ### Permission errors
 If SteamOS didn't do it, make sure /var/tmp is accessible to everyone after decrypting:
-* sudo chmod 777 /var/tmp
+* `sudo chmod 777 /var/tmp`
 
