@@ -151,6 +151,14 @@ You should see the graphical window pop up on your SteamOS desktop as if you sta
 
 Yo dawg, I heard you like containers. 
 
+Enable netfilter module:
+* `sudo modprobe br_netfilter`
+* `echo "br_netfilter" | sudo tee /etc/modules-load.d/netfilter.conf`
+
+Enable ip forwarding:
+* `sudo sysctl net.ipv4.ip_forward=1`
+* `echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/ip_forward.conf`
+
 Inside of your .nspawn file:
 * under [Exec] add: `SystemCallFilter=add_key keyctl bpf`
 * under [Files] add: `Bind=/dev/fuse`
