@@ -181,22 +181,27 @@ If you find yourself creating multiple nspawn containers, you can use btrfs subv
 Create the subvolume:
 * `sudo btrfs subvol create /mnt/btrfs/@nspawn`
 
+Mount the nspawn subvolume:
+* `sudo mount -o subvol=@nspawn /dev/\<btrfs device\> /mnt/nspawn
+
 Create a directory for both templates and containers inside:
-* `sudo mkdir /mnt/btrfs/@nspawn/templates`
-* `sudo mkdir /mnt/btrfs/@nspawn/containers`
+* `sudo mkdir /mnt/nspawn/templates`
+* `sudo mkdir /mnt/nspawn/containers`
 
 Create subvolumes inside templates for each base OS:
-* `sudo btrfs subvol create /mnt/btrfs/@nspawn/templates/@archlinux`
-* `sudo btrfs subvol create /mnt/btrfs/@nspawn/templates/@debian`
+* `sudo btrfs subvol create /mnt/nspawn/templates/@archlinux`
+* `sudo btrfs subvol create /mnt/nspawn/templates/@debian`
 
-Install the OS's to them 
+Install the Operating systems to them 
 
 Edit your .bashrc's alias:
 ```bash
-alias archlinux="sudo systemd-nspawn --machine archlinux --template /mnt/btrfs/@nspawn/templates/archlinux -D /mnt/btrfs/@nspawn/containers/archlinux"
+TEMPLATES="/mnt/nspawn/templates"
+CONTAINERS="/mnt/nspawn/containers"
+alias archlinux="sudo systemd-nspawn --machine archlinux --template $TEMPLATES/@archlinux -D $CONTAINERS/archlinux"
 ```
 
-Now you can create an alias for many containers and have them all base themselves off an existing OS install.
+Now you can create an alias for many containers and have them all base themselves off an existing OS!
 
 # Conclusion
 Out of the box the deck can already run any Linux OS and application, you just have to set it up. That makes it quite possibly the most useful handheld device.
