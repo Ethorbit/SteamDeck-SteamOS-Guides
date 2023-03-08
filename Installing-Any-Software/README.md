@@ -26,7 +26,7 @@ It's a chroot on steroids that can boot different Linux operating systems. We ca
 Before proceeding, set a password if you haven't already. Inside the Desktop Konsole, type: `passwd` to set it.
 
 ## ![warning-icon](https://i.imgur.com/ZWdfbEN.png) Warning
-Because the goal is to make the nspawn container tightly integrated with the host and to give it the greatest privileges so that it can run anything, you have the ability to destroy your SteamOS system from inside. You should still take care what root commands you execute inside the container and treat it as if you were using your host system. You don't have to worry about file conflicts though because we will only share /home and mounts, so feel free to install anything. Just understand that if you wanted to, you could completely wipe your home with a single root command just like you could if you were on your host.
+Because the goal is to make the nspawn container tightly integrated with the host and to give it the greatest privileges so that it can run anything, you have the ability to destroy your SteamOS system from inside. You should still take care when using root and treat it as if it were on the host system. You don't have to worry about file conflicts though because we will only share /home and mounts, so feel free to install anything. Just understand that if you wanted to, you could completely wipe your shared directories with a single container root command.
 
 I'm not responsible for any damage or data loss.
 
@@ -173,8 +173,33 @@ Restart container and you should have a functioning docker inside, if your user 
 
 Now I'm inside an Alpine Linux Docker container inside of an Arch Linux nspawn container that's inside of SteamOS. The possibilites are endless!
 
-## Conclusion
-By default, the Deck can already run any Linux OS and application, you just have to set it up. That makes this quite possibly the most useful handheld device.
+### Using btrfs subvolumes as templates for nspawn containers (Optional)
+If you find yourself creating multiple nspawn containers, you can use btrfs subvolumes as OS base installs instead of installing the same OS repeatedly. This can help save space.
+
+This can save space as you aren't duplicating the base OS every time.
+
+Create the subvolume:
+* `sudo btrfs subvol create /mnt/my_btrfs/@nspawn`
+
+Create a directory for both templates and containers inside:
+* `sudo mkdir /mnt/my_btrfs/@nspawn/templates`
+* `sudo mkdir /mnt/my_btrfs/@nspawn/containers`
+
+Create subvolumes inside templates for each base OS:
+* `sudo btrfs subvol create /mnt/my_btrfs/@nspawn/templates/@archlinux`
+* `sudo btrfs subvol create /mnt/my_btrfs/@nspawn/templates/@debian`
+
+Install the OS's to them 
+
+Edit your .bashrc's alias:
+```bash
+alias archlinux="sudo systemd-nspawn --machine archlinux --template /mnt/my_btrfs/@nspawn/templates/archlinux -D /mnt/my_btrfs/@nspawn/containers/archlinux"
+```
+
+Now you can create an alias for many containers and have them all base themselves off an existing OS install.
+
+# Conclusion
+Out of the box the deck can already run any Linux OS and application, you just have to set it up. That makes it quite possibly the most useful handheld device.
 
 nspawn is partly built for security, so as you saw when setting up Docker, we had to still grant additional device access in order to get Docker running properly even though nspawn already runs as root and we granted Capability=all. This might be an issue you may run into when setting up other similarly sophisticated Linux services, but just keep an eye on the logs to see what the applications require that the container may be missing. With the right configuration, nspawn can run anything. 
 
