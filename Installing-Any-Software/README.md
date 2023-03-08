@@ -173,10 +173,8 @@ Restart container and you should have a functioning docker inside, if your user 
 
 Now I'm inside an Alpine Linux Docker container inside of an Arch Linux nspawn container that's inside of SteamOS. The possibilites are endless!
 
-### Using btrfs subvolumes as templates for nspawn containers (Optional)
+## Using btrfs subvolumes as OS templates (Optional)
 If you find yourself creating multiple nspawn containers, you can use btrfs subvolumes as OS base installs instead of installing the same OS repeatedly. This can help save space.
-
-This can save space as you aren't duplicating the base OS every time.
 
 Create the subvolume:
 * `sudo btrfs subvol create /mnt/my_btrfs/@nspawn`
