@@ -55,6 +55,8 @@ BindReadOnly=/tmp/.X11-unix
 
 If you don't want the container to have the ability to manage the deck's user accounts, you should replace Bind with BindReadOnly for hosts, passwd, shadow, gshadow, group, subuid, subgid, sudoers and sudoers.d.
 
+We also give it /home and /mnt to share our files with the container.
+
 ## Setting up Docker
 
 My life wouldn't be complete without Docker, so as a bonus I'm going to show how to get it working.
@@ -63,3 +65,13 @@ Inside of your .nspawn file:
 * under [Exec] add: `SystemCallFilter=add_key keyctl bpf`
 * under [Files] add: `Bind=/dev/fuse`
 
+Inside the container, install docker:
+* `sudo pacman -S docker`
+* `sudo systemctl enable docker --now`
+
+If you made the user directory mounts read-only, you'll need to also add the docker group on the host or the service will fail:
+* `sudo groupadd -r docker`
+* `sudo usermod -aG docker deck`
+* `sudo systemctl restart sddm`
+
+Restart container and you should have a functioning docker inside, add deck to the docker group and you should be able to use it without root. If it doesn't work, try checking `sudo journalctl -xeu docker` and `sudo dmesg` as it's likely due to a missing kernel parameter.
