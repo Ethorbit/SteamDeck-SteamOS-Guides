@@ -57,6 +57,8 @@ BindReadOnly=/tmp/.X11-unix
 
 If you don't want the container to have the ability to manage the deck's user accounts, you should replace Bind with BindReadOnly for hosts, passwd, shadow, gshadow, group, subuid, subgid, sudoers and sudoers.d.
 
+If you don't need the fullest of root privileges for anything, you can remove the Capability=all
+
 We also give it /home and /mnt to share our files with the container.
 
 ## Setting up Docker
