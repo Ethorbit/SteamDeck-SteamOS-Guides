@@ -20,11 +20,46 @@ At this point, most people would suggest just using Flatpaks, AppImages, or Dist
 
 It's a chroot on steroids that can boot different Linux operating systems. We can run desktop applications from it and even run additional container solutions like Docker and Podman inside. Whatever you could do on a traditional Linux operating system can be done inside an nspawn container. The best part is you do not need to install it.
 
+Before proceeding, set a password if you haven't already. Inside the Desktop Konsole, type: `passwd` to set it.
+
 ### Installing a secondary Linux OS to a directory
-systemd-nspawn boots directories so we need to install an OS to one. It can be any Linux OS. You can use tools like debootstrap or pacstrap to install from a single command. (just don't use pacstrap from inside SteamOS or it will download from the SteamOS repos)
+systemd-nspawn boots directories so we need to install an OS to one. It can be any Linux OS. You can use tools like debootstrap for Debian, pacstrap for Arch, etc to install from a single command. (just don't use pacstrap from inside SteamOS or it will download from SteamOS repos)
 
 Btw, I have an Arch Linux install as a btrfs subvolume mounted to /mnt/archlinux.
+
+### Creating .nspawn file
+We are going to create a systemd .nspawn configuration.
+
+* `sudo mkdir /etc/systemd/nspawn`
+* sudo nano /etc/systemd/nspawn/archlinux.nspawn 
+```
+[Exec]
+Boot=true
+Capability=all
+
+[Files]
+Bind=/home
+Bind=/mnt
+Bind=/etc/hosts
+Bind=/etc/passwd
+Bind=/etc/shadow
+Bind=/etc/group
+Bind=/etc/gshadow
+Bind=/etc/subgid
+Bind=/etc/subuid
+Bind=/etc/sudoers
+Bind=/etc/sudoers.d
+BindReadOnly=/etc/resolv.conf
+BindReadOnly=/tmp/.X11-unix
+```
+
+If you don't want the container to have the ability to manage the deck's user accounts, you should replace Bind with BindReadOnly for hosts, passwd, shadow, gshadow, group, subuid, subgid, sudoers and sudoers.d.
 
 ## Setting up Docker
 
 My life wouldn't be complete without Docker, so as a bonus I'm going to show how to get it working.
+
+Inside of your .nspawn file:
+* under [Exec] add: `SystemCallFilter=add_key keyctl bpf`
+* under [Files] add: `Bind=/dev/fuse`
+
