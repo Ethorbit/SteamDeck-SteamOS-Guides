@@ -62,8 +62,45 @@ If you don't need the fullest of root privileges for anything, you can remove th
 
 We also give it /home and /mnt to share our files with the container.
 
+### Creating history files
+So since we plan to share our home directory with our container, we need to make a history file for it, otherwise your command history will be shared with the container. You might be okay with that, but it might become confusing if you forget what command came from where.
+
+`mv ~/.bash_history ~/.bash_history_deck`
+`touch ~/.bash_history_nspawn`
+
+### Editing .bashrc
+This file is executed with every new shell, and since we're sharing our home with the container, the container will also run it.
+`nano ~/.bashrc`
+
+```
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+```
+
+First, we need to add a DISPLAY variable. The reason is so that both the host and container share the same display, this is what allows us to open desktop applications combined with our .X11-unix bind we made in our .nspawn config
+
+```
+export DISPLAY=:0
+```
+
+Now here's the problem, how can we tell when we are working with the deck or an nspawn container? Well, one way is we can check the /etc/hostname file. Your deck's hostname by default is "steamdeck". You can check by running this command: `cat /etc/hostname`
+
+```
+if [[ -f /etc/hostname ]] && 
+   [[ `cat "/etc/hostname"` = "steamdeck" ]]
+then
+    # code for steamOS
+    
+else
+    # code for nspawn container
+fi
+```
+
+
 ### Booting the container
-It is very simple 
+Just type your command's alias set in .bashrc: `archlinux`
+
+You should see the systemd boot sequence in the terminal as if we were booting a real Linux OS.
 
 ### Setting up Docker
 
