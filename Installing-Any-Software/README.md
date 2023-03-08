@@ -78,11 +78,6 @@ So since we plan to share our home directory with our container, we need to make
 This file is executed with every new shell, and since we're sharing our home with the container, the container will also run it.
 `nano ~/.bashrc`
 
-```
-# If not running interactively, don't do anything
-[[ $- != *i* ]] && return
-```
-
 First, we need to add a DISPLAY variable. The reason is so that both the host and container share the same display, this is what allows us to open desktop applications combined with our .X11-unix bind we made in our .nspawn config
 
 ```bash
@@ -153,8 +148,6 @@ You should see the graphical window pop up on your SteamOS desktop as if you sta
 
 ## Setting up Docker (Optional)
 
-![meme](https://i.imgur.com/DxTfA8O.png)
-
 Enable the netfilter module:
 * `sudo modprobe br_netfilter`
 * `echo "br_netfilter" | sudo tee /etc/modules-load.d/netfilter.conf`
@@ -184,6 +177,8 @@ Restart container and you should have a functioning docker inside, if it doesn't
 `docker run -it --rm --name alpine alpine:latest /bin/sh`
 
 Now I'm inside an Alpine Linux Docker container that's inside of an Arch Linux nspawn container that's inside of SteamOS. The possibilites are endless!
+
+![meme](https://i.imgur.com/DxTfA8O.png)
 
 ## Using btrfs subvolumes as OS templates (Optional)
 If you find yourself creating multiple nspawn containers, you can use btrfs subvolumes as OS templates instead of installing the same OS repeatedly. This can help save space.
