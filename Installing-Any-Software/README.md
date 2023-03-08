@@ -155,6 +155,9 @@ Inside of your .nspawn file:
 * under [Exec] add: `SystemCallFilter=add_key keyctl bpf`
 * under [Files] add: `Bind=/dev/fuse`
 
+Also give any containers using the .nspawn access to fuse:
+`sudo systemctl set-property systemd-nspawn@archlinux DeviceAllow='/dev/fuse rwm'`
+
 If you made the user directory mounts read-only, you'll need to first add the docker group on the host or the service will fail:
 * `sudo groupadd -r docker`
 * `sudo usermod -aG docker deck`
