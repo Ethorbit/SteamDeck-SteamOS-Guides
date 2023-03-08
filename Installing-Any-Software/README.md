@@ -142,8 +142,8 @@ You should see the systemd boot sequence in the terminal as if we were booting a
 ### Testing desktop applications
 
 Install and run xeyes:
-`sudo pacman -S xorg-xeyes`
-`xeyes`
+* `sudo pacman -S xorg-xeyes`
+* `xeyes`
 
 You should see the graphical window pop up on your SteamOS desktop as if you started it from SteamOS. Pretty cool, huh?
 
