@@ -25,12 +25,18 @@ It's a chroot on steroids that can boot different Linux operating systems. We ca
 
 Before proceeding, set a password if you haven't already. Inside the Desktop Konsole, type: `passwd` to set it.
 
-### Installing a secondary Linux OS to a directory
+## ![warning-icon](https://i.imgur.com/ZWdfbEN.png) Warning
+Because the goal is to make the nspawn container tightly integrated with the host and to give it the greatest privileges so that it can run anything, you have the ability to destroy your SteamOS system from inside. You should still take care what root commands you execute inside the container and treat it as if you were using your host system. You don't have to worry about file conflicts though because we will only share /home and mounts, so feel free to install anything. Just understand that if you wanted to, you could completely wipe your home with a single root command just like you could if you were on your host.
+
+I'm not responsible for any damage or data loss.
+
+
+## Installing a secondary Linux OS to a directory
 systemd-nspawn boots directories so we need to install an OS to one. It can be any Linux OS. You can use tools like debootstrap for Debian, pacstrap for Arch, etc to install from a single command. (just don't use pacstrap from inside SteamOS or it will download from SteamOS repos)
 
 Btw, I have an Arch Linux install as a btrfs subvolume mounted to /mnt/archlinux.
 
-### Creating .nspawn file
+## Creating .nspawn file
 We are going to create a systemd .nspawn configuration.
 
 * `sudo mkdir /etc/systemd/nspawn`
@@ -62,13 +68,13 @@ If you don't need the fullest of root privileges for anything, you can remove th
 
 We also give it /home and /mnt to share our files with the container.
 
-### Creating history files
+## Creating history files
 So since we plan to share our home directory with our container, we need to make a history file for it, otherwise your command history will be shared with the container. You might be okay with that, but it might become confusing if you forget what command came from where.
 
-`mv ~/.bash_history ~/.bash_history_deck`
-`touch ~/.bash_history_nspawn`
+* `mv ~/.bash_history ~/.bash_history_deck`
+* `touch ~/.bash_history_nspawn`
 
-### Editing .bashrc
+## Editing .bashrc
 This file is executed with every new shell, and since we're sharing our home with the container, the container will also run it.
 `nano ~/.bashrc`
 
@@ -96,13 +102,14 @@ else
 fi
 ```
 
+You'll of course need to improve this solution if you plan to run multiple nspawn containers, but as you'll see later you can do pretty much anything with a single one.
 
-### Booting the container
+## Booting the container
 Just type your command's alias set in .bashrc: `archlinux`
 
 You should see the systemd boot sequence in the terminal as if we were booting a real Linux OS.
 
-### Setting up Docker
+## Setting up Docker
 
 Yo dawg, I heard you like containers. My life wouldn't be complete without Docker, so as a bonus I'm going to show how to get it working
 
@@ -125,7 +132,9 @@ Restart container and you should have a functioning docker inside, add deck to t
 
 Now I'm inside an Alpine Linux Docker container inside of an Arch Linux nspawn container that's inside of SteamOS. The possibilites are endless!
 
-### Conclusion
+## Conclusion
 By default, the Deck can already run any Linux OS and application, you just have to set it up. That makes this quite possibly the most useful handheld device.
 
-nspawn is partly built for security, so as you saw when setting up Docker, we had to still grant additional device access in order to get Docker running properly even though nspawn already runs as root and we granted Capability=all. This might be an issue you may run into when setting up other similarly sophisticated Linux services, but just keep an eye on the logs to see what the applications require that the container may be missing. With the right configuration, nspawn can run anything.
+nspawn is partly built for security, so as you saw when setting up Docker, we had to still grant additional device access in order to get Docker running properly even though nspawn already runs as root and we granted Capability=all. This might be an issue you may run into when setting up other similarly sophisticated Linux services, but just keep an eye on the logs to see what the applications require that the container may be missing. With the right configuration, nspawn can run anything. 
+
+
