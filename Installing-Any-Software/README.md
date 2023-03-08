@@ -141,7 +141,7 @@ You should see the systemd boot sequence in the terminal as if we were booting a
 
 ![Example](boot.gif)
 
-### Testing desktop applications
+## Testing desktop applications
 
 Install and run xeyes:
 * `sudo pacman -S xorg-xeyes`
@@ -151,11 +151,11 @@ You should see the graphical window pop up on your SteamOS desktop as if you sta
 
 ![Example](xeyes.gif)
 
-### Setting up Docker (Optional)
+## Setting up Docker (Optional)
 
-Yo dawg, I heard you like containers. 
+![meme](https://i.imgur.com/DxTfA8O.png)
 
-Enable netfilter module:
+Enable the netfilter module:
 * `sudo modprobe br_netfilter`
 * `echo "br_netfilter" | sudo tee /etc/modules-load.d/netfilter.conf`
 
@@ -179,14 +179,14 @@ Inside the container, install docker:
 * `sudo pacman -S docker`
 * `sudo systemctl enable docker --now`
 
-Restart container and you should have a functioning docker inside, if it doesn't work, try checking `sudo journalctl -xeu docker` and `sudo dmesg` as it's likely due to a missing kernel parameter. If your user is a part of the docker group, you should be able to use docker without root.
+Restart container and you should have a functioning docker inside, if it doesn't work, try checking `sudo journalctl -xeu docker` and `sudo dmesg` as it's likely due to a missing kernel parameter or module. If your user is a part of the docker group, you should be able to use docker without root.
 
 `docker run -it --rm --name alpine alpine:latest /bin/sh`
 
 Now I'm inside an Alpine Linux Docker container that's inside of an Arch Linux nspawn container that's inside of SteamOS. The possibilites are endless!
 
 ## Using btrfs subvolumes as OS templates (Optional)
-If you find yourself creating multiple nspawn containers, you can use btrfs subvolumes as OS base installs instead of installing the same OS repeatedly. This can help save space.
+If you find yourself creating multiple nspawn containers, you can use btrfs subvolumes as OS templates instead of installing the same OS repeatedly. This can help save space.
 
 (I'm assuming you have your btrfs formatted partition mounted at /mnt/btrfs)
 
