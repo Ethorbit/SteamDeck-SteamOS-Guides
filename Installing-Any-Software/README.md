@@ -1,13 +1,6 @@
 # Steam Deck (SteamOS) installing any packages/software
 SteamOS has (for the most part) a read-only filesystem which is wiped every update. The reason for this is to ensure stablity and security, espcially since despite being based on Arch Linux, its updates are infrequent and its packages are outdated to retain maximum compatibility.
 
-## Prerequisites
-* A separate Linux operating system installed to its own directory in a mounted partition using something like debootstrap, pacstrap, etc. (If you use pacstrap DO NOT do it in SteamOS or it will install everything from the SteamOS repository)
-
-I personally have an Arch Linux install as a btrfs subvolume mounted to /mnt/archlinux.
-______
-
-
 ### So why not just use pacman?
 
 Technically, you can just install packages by simply disabling readonly and installing arch packages the usual way:
@@ -25,9 +18,13 @@ At this point, most people would suggest just using Flatpaks, AppImages, or Dist
 
 # systemd-nspawn!
 
-It's a chroot on steroids that can boot different Linux operating systems. We can run desktop applications from it and even run additional container solutions like Docker and Podman inside. Whatever you could do on a traditional Linux operating system can be done inside an nspawn container. The best part is you do not need to download anything because it comes with SteamOS/Arch.
+It's a chroot on steroids that can boot different Linux operating systems. We can run desktop applications from it and even run additional container solutions like Docker and Podman inside. Whatever you could do on a traditional Linux operating system can be done inside an nspawn container. The best part is you do not need to install it.
 
+### Installing a secondary Linux OS to a directory
+systemd-nspawn boots directories so we need to install an OS to one. It can be any Linux OS. You can use tools like debootstrap or pacstrap to install from a single command. (just don't use pacstrap from inside SteamOS or it will download from the SteamOS repos)
+
+Btw, I have an Arch Linux install as a btrfs subvolume mounted to /mnt/archlinux.
 
 ## Setting up Docker
 
-My life wouldn't be complete without Docker, so as a bonus I'm going to show how to get this working.
+My life wouldn't be complete without Docker, so as a bonus I'm going to show how to get it working.
