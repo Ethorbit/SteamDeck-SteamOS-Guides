@@ -175,11 +175,11 @@ Inside the container, install docker:
 * `sudo pacman -S docker`
 * `sudo systemctl enable docker --now`
 
-Restart container and you should have a functioning docker inside, if your user is a part of the docker group, you should be able to use docker without root. If it doesn't work, try checking `sudo journalctl -xeu docker` and `sudo dmesg` as it's likely due to a missing kernel parameter.
+Restart container and you should have a functioning docker inside, if it doesn't work, try checking `sudo journalctl -xeu docker` and `sudo dmesg` as it's likely due to a missing kernel parameter. If your user is a part of the docker group, you should be able to use docker without root.
 
 `docker run -it --rm --name alpine alpine:latest /bin/sh`
 
-Now I'm inside an Alpine Linux Docker container inside of an Arch Linux nspawn container that's inside of SteamOS. The possibilites are endless!
+Now I'm inside an Alpine Linux Docker container that's inside of an Arch Linux nspawn container that's inside of SteamOS. The possibilites are endless!
 
 ## Using btrfs subvolumes as OS templates (Optional)
 If you find yourself creating multiple nspawn containers, you can use btrfs subvolumes as OS base installs instead of installing the same OS repeatedly. This can help save space.
