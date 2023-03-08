@@ -10,7 +10,7 @@ Technically, you can just install packages by simply disabling readonly and inst
 * `sudo pacman -S <package name>`
 
 #### But don't do this!
-What will end up happening is eventually a package you try to install will require a newer version of an existing dependency, and updating it would break compatibility with the Steam Deck causing an unknown amount of problems.
+What will end up happening is eventually a package you try to install will require a newer version of an existing dependency, and updating that dependency would break its compatibility with the Steam Deck causing an unknown amount of problems.
 
 Even if there are no conflicts, your changes will be wiped on the next update - that's annoying!
 
