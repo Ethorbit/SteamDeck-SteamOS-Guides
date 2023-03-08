@@ -124,7 +124,7 @@ export DISPLAY=:0
 if [[ -f /etc/hostname ]] && 
    [[ `cat "/etc/hostname"` = "steamdeck" ]]
 then
-    export HISTFILE="$HOME/.bash_history_steamdeck"
+    export HISTFILE="$HOME/.bash_history_deck"
     alias archlinux="sudo systemd-nspawn --machine archlinux -D /mnt/archlinux"
     xhost +si:localuser:$USER
 else
