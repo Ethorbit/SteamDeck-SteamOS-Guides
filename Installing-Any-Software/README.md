@@ -176,22 +176,24 @@ Now I'm inside an Alpine Linux Docker container inside of an Arch Linux nspawn c
 ## Using btrfs subvolumes as OS templates (Optional)
 If you find yourself creating multiple nspawn containers, you can use btrfs subvolumes as OS base installs instead of installing the same OS repeatedly. This can help save space.
 
+(I'm assuming you have your btrfs formatted partition mounted at /mnt/btrfs)
+
 Create the subvolume:
-* `sudo btrfs subvol create /mnt/my_btrfs/@nspawn`
+* `sudo btrfs subvol create /mnt/btrfs/@nspawn`
 
 Create a directory for both templates and containers inside:
-* `sudo mkdir /mnt/my_btrfs/@nspawn/templates`
-* `sudo mkdir /mnt/my_btrfs/@nspawn/containers`
+* `sudo mkdir /mnt/btrfs/@nspawn/templates`
+* `sudo mkdir /mnt/btrfs/@nspawn/containers`
 
 Create subvolumes inside templates for each base OS:
-* `sudo btrfs subvol create /mnt/my_btrfs/@nspawn/templates/@archlinux`
-* `sudo btrfs subvol create /mnt/my_btrfs/@nspawn/templates/@debian`
+* `sudo btrfs subvol create /mnt/btrfs/@nspawn/templates/@archlinux`
+* `sudo btrfs subvol create /mnt/btrfs/@nspawn/templates/@debian`
 
 Install the OS's to them 
 
 Edit your .bashrc's alias:
 ```bash
-alias archlinux="sudo systemd-nspawn --machine archlinux --template /mnt/my_btrfs/@nspawn/templates/archlinux -D /mnt/my_btrfs/@nspawn/containers/archlinux"
+alias archlinux="sudo systemd-nspawn --machine archlinux --template /mnt/btrfs/@nspawn/templates/archlinux -D /mnt/btrfs/@nspawn/containers/archlinux"
 ```
 
 Now you can create an alias for many containers and have them all base themselves off an existing OS install.
