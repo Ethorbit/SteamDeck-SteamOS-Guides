@@ -1,5 +1,3 @@
-This is unfinished.
-
 # Steam Deck (SteamOS) installing any packages/software
 SteamOS has (for the most part) a read-only filesystem which is wiped every update. The reason for this is to ensure stablity and security, especially since despite being based on Arch Linux, its updates are infrequent and its packages are outdated.
 
