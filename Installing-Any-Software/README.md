@@ -139,6 +139,8 @@ Just type your command's alias set in .bashrc: `archlinux`
 
 You should see the systemd boot sequence in the terminal as if we were booting a real Linux OS. Now you can update it and install packages as if it were your real OS.
 
+![Example](boot.gif)
+
 ### Testing desktop applications
 
 Install and run xeyes:
@@ -146,6 +148,8 @@ Install and run xeyes:
 * `xeyes`
 
 You should see the graphical window pop up on your SteamOS desktop as if you started it from SteamOS. Pretty cool, huh?
+
+![Example](xeyes.gif)
 
 ### Setting up Docker (Optional)
 
