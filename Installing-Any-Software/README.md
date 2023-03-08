@@ -1,7 +1,7 @@
 # Steam Deck (SteamOS) installing any packages/software
 SteamOS has (for the most part) a read-only filesystem which is wiped every update. The reason for this is to ensure stablity and security, especially since despite being based on Arch Linux, its updates are infrequent and its packages are outdated.
 
-### So why not just use pacman?
+### So why not just disable readonly?
 
 Technically, you can just install packages by simply disabling readonly and installing arch packages the usual way:
 * `sudo steamos-readonly disable`
@@ -9,7 +9,8 @@ Technically, you can just install packages by simply disabling readonly and inst
 * `sudo pacman-key --populate archlinux`
 * `sudo pacman -S <package name>`
 
-**But don't do this!** What will end up happening is eventually a package you try to install will require a newer version of an existing dependency, and updating it would break compatibility with the Steam Deck causing an unknown amount of problems.
+#### But don't do this!
+What will end up happening is eventually a package you try to install will require a newer version of an existing dependency, and updating it would break compatibility with the Steam Deck causing an unknown amount of problems.
 
 Even if there are no conflicts, your changes will be wiped on the next update - that's annoying!
 
