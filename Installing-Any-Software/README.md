@@ -85,13 +85,13 @@ This file is executed with every new shell, and since we're sharing our home wit
 
 First, we need to add a DISPLAY variable. The reason is so that both the host and container share the same display, this is what allows us to open desktop applications combined with our .X11-unix bind we made in our .nspawn config
 
-```
+```bash
 export DISPLAY=:0
 ```
 
 Now here's the problem, how can we tell when we are working with the deck or an nspawn container? Well, one way is we can check the /etc/hostname file. Your deck's hostname by default is "steamdeck". You can check by running this command: `cat /etc/hostname`
 
-```
+```bash
 if [[ -f /etc/hostname ]] && 
    [[ `cat "/etc/hostname"` = "steamdeck" ]]
 then
@@ -106,7 +106,7 @@ In the steamOS section, we need to add a few lines
 * Set our new HISTFILE: `export HISTFILE="$HOME/.bash_history_deck"`
 * Container alias: `alias archlinux="sudo systemd-nspawn --machine archlinux -D /mnt/archlinux"`
 Make sure to set -D to where you installed your secondary OS. --machine name should be the name of your .nspawn file.
-* Allow user in container to access our running X display server: `xhost +si:localuser:$USER`
+* Allow our user in the container to access our running X display server: `xhost +si:localuser:$USER`
 
 In the nspawn section, we need to set its HISTFILE: `export HISTFILE="$HOME/.bash_history_nspawn"`
 
@@ -137,26 +137,34 @@ You'll of course need to improve this solution if you plan to run multiple nspaw
 ## Booting the container
 Just type your command's alias set in .bashrc: `archlinux`
 
-You should see the systemd boot sequence in the terminal as if we were booting a real Linux OS.
+You should see the systemd boot sequence in the terminal as if we were booting a real Linux OS. Now you can update it and install packages as if it were your real OS.
 
-## Setting up Docker
+### Testing desktop applications
 
-Yo dawg, I heard you like containers. My life wouldn't be complete without Docker, so as a bonus I'm going to show how to get it working
+Install and run xeyes:
+`sudo pacman -S xorg-xeyes`
+`xeyes`
+
+You should see the graphical window pop up on your SteamOS desktop as if you started it from SteamOS. Pretty cool, huh?
+
+### Setting up Docker (Optional)
+
+Yo dawg, I heard you like containers. 
 
 Inside of your .nspawn file:
 * under [Exec] add: `SystemCallFilter=add_key keyctl bpf`
 * under [Files] add: `Bind=/dev/fuse`
 
-Inside the container, install docker:
-* `sudo pacman -S docker`
-* `sudo systemctl enable docker --now`
-
-If you made the user directory mounts read-only, you'll need to also add the docker group on the host or the service will fail:
+If you made the user directory mounts read-only, you'll need to first add the docker group on the host or the service will fail:
 * `sudo groupadd -r docker`
 * `sudo usermod -aG docker deck`
 * `sudo systemctl restart sddm`
 
-Restart container and you should have a functioning docker inside, add deck to the docker group and you should be able to use it without root. If it doesn't work, try checking `sudo journalctl -xeu docker` and `sudo dmesg` as it's likely due to a missing kernel parameter.
+Inside the container, install docker:
+* `sudo pacman -S docker`
+* `sudo systemctl enable docker --now`
+
+Restart container and you should have a functioning docker inside, if your user is a part of the docker group, you should be able to use docker without root. If it doesn't work, try checking `sudo journalctl -xeu docker` and `sudo dmesg` as it's likely due to a missing kernel parameter.
 
 `docker run -it --rm --name alpine alpine:latest /bin/sh`
 
