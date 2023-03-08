@@ -1,7 +1,7 @@
 This is unfinished.
 
 # Steam Deck (SteamOS) installing any packages/software
-SteamOS has (for the most part) a read-only filesystem which is wiped every update. The reason for this is to ensure stablity and security, espcially since despite being based on Arch Linux, its updates are infrequent and its packages are outdated to retain maximum compatibility.
+SteamOS has (for the most part) a read-only filesystem which is wiped every update. The reason for this is to ensure stablity and security, especially since despite being based on Arch Linux, its updates are infrequent and its packages are outdated.
 
 ### So why not just use pacman?
 
@@ -62,9 +62,12 @@ If you don't need the fullest of root privileges for anything, you can remove th
 
 We also give it /home and /mnt to share our files with the container.
 
-## Setting up Docker
+### Booting the container
+It is very simple 
 
-My life wouldn't be complete without Docker, so as a bonus I'm going to show how to get it working.
+### Setting up Docker
+
+Yo dawg, I heard you like containers. My life wouldn't be complete without Docker, so as a bonus I'm going to show how to get it working
 
 Inside of your .nspawn file:
 * under [Exec] add: `SystemCallFilter=add_key keyctl bpf`
@@ -80,3 +83,12 @@ If you made the user directory mounts read-only, you'll need to also add the doc
 * `sudo systemctl restart sddm`
 
 Restart container and you should have a functioning docker inside, add deck to the docker group and you should be able to use it without root. If it doesn't work, try checking `sudo journalctl -xeu docker` and `sudo dmesg` as it's likely due to a missing kernel parameter.
+
+`docker run -it --rm --name alpine alpine:latest /bin/sh`
+
+Now I'm inside an Alpine Linux Docker container inside of an Arch Linux nspawn container that's inside of SteamOS. The possibilites are endless!
+
+### Conclusion
+By default, the Deck can already run any Linux OS and application, you just have to set it up. That makes this quite possibly the most useful handheld device.
+
+nspawn is partly built for security, so as you saw when setting up Docker, we had to still grant additional device access in order to get Docker running properly even though nspawn already runs as root and we granted Capability=all. This might be an issue you may run into when setting up other similarly sophisticated Linux services, but just keep an eye on the logs to see what the applications require that the container may be missing. With the right configuration, nspawn can run anything.
