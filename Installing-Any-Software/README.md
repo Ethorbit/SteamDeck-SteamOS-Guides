@@ -62,7 +62,7 @@ BindReadOnly=/etc/resolv.conf
 BindReadOnly=/tmp/.X11-unix
 ```
 
-If you don't want the container to have the ability to manage the deck's user accounts, you should replace Bind with BindReadOnly for hosts, passwd, shadow, gshadow, group, subuid, subgid, sudoers and sudoers.d.
+If you don't want the container to have the ability to manage the deck's users and groups, you should replace Bind with BindReadOnly for hosts, passwd, shadow, gshadow, group, subuid, subgid, sudoers and sudoers.d.
 
 If you don't need the fullest of root privileges for anything, you can remove the Capability=all
 
@@ -102,7 +102,37 @@ else
 fi
 ```
 
-You'll of course need to improve this solution if you plan to run multiple nspawn containers, but as you'll see later you can do pretty much anything with a single one.
+In the steamOS section, we need to add a few lines
+* Set our new HISTFILE: `export HISTFILE="$HOME/.bash_history_deck"`
+* Container alias: `alias archlinux="sudo systemd-nspawn --machine archlinux -D /mnt/archlinux"`
+Make sure to set -D to where you installed your secondary OS. --machine name should be the name of your .nspawn file.
+* Allow user in container to access our running X display server: `xhost +si:localuser:$USER`
+
+In the nspawn section, we need to set its HISTFILE: `export HISTFILE="$HOME/.bash_history_nspawn"`
+
+Your .bashrc should look like this in the end:
+```bash
+#
+# ~/.bashrc
+#
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+export DISPLAY=:0
+
+if [[ -f /etc/hostname ]] && 
+   [[ `cat "/etc/hostname"` = "steamdeck" ]]
+then
+    export HISTFILE="$HOME/.bash_history_steamdeck"
+    alias archlinux="sudo systemd-nspawn --machine archlinux -D /mnt/archlinux"
+    xhost +si:localuser:$USER
+else
+    export HISTFILE="$HOME/.bash_history_nspawn"
+fi
+```
+
+You'll of course need to improve this solution if you plan to run multiple nspawn containers, but as you'll see later you only really need one.
 
 ## Booting the container
 Just type your command's alias set in .bashrc: `archlinux`
