@@ -33,7 +33,7 @@ Btw, I have an Arch Linux install as a btrfs subvolume mounted to /mnt/archlinux
 We are going to create a systemd .nspawn configuration.
 
 * `sudo mkdir /etc/systemd/nspawn`
-* sudo nano /etc/systemd/nspawn/archlinux.nspawn 
+* `sudo nano /etc/systemd/nspawn/archlinux.nspawn`
 ```
 [Exec]
 Boot=true
