@@ -31,10 +31,12 @@ Because the goal is to make the nspawn container tightly integrated with the hos
 I'm not responsible for any damage or data loss.
 
 
-## Installing a secondary Linux OS to a directory
+## Installing a Linux distro to a directory
 systemd-nspawn boots directories so we need to install an OS to one. It can be any Linux OS. You can use tools like debootstrap for Debian, pacstrap for Arch, etc to install from a single command. (just don't use pacstrap from inside SteamOS or it will download from SteamOS repos)
 
-Btw, I have an Arch Linux install as a btrfs subvolume mounted to /mnt/archlinux.
+Btw, I install Arch Linux.
+
+![Example](install.gif)
 
 ## Creating .nspawn file
 We are going to create a systemd .nspawn configuration.
@@ -199,7 +201,7 @@ Create subvolumes inside templates for each base OS:
 * `sudo btrfs subvol create /mnt/nspawn/templates/@archlinux`
 * `sudo btrfs subvol create /mnt/nspawn/templates/@debian`
 
-Install the Operating systems to them 
+Install an OS to each one
 
 Edit your .bashrc's alias:
 ```bash
