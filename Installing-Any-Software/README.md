@@ -7,7 +7,8 @@ SteamOS has (for the most part) a read-only filesystem which is wiped every upda
 
 Technically, you can just install packages by simply disabling readonly and installing arch packages the usual way:
 * `sudo steamos-readonly disable`
-* `sudo pacman -Sy`
+* `sudo pacman-key --init`
+* `sudo pacman-key --populate archlinux`
 * `sudo pacman -S <package name>`
 
 **But don't do this!** What will end up happening is eventually a package you try to install will require a newer version of an existing dependency, and updating it would break compatibility with the Steam Deck causing an unknown amount of problems.
