@@ -190,7 +190,7 @@ Create the subvolume:
 * `sudo btrfs subvol create /mnt/btrfs/@nspawn`
 
 Mount the nspawn subvolume:
-* `sudo mount -o subvol=@nspawn /dev/\<btrfs device\> /mnt/nspawn
+* `sudo mount -o subvol=@nspawn /dev/<partition> /mnt/nspawn`
 
 Create a directory for both templates and containers inside:
 * `sudo mkdir /mnt/nspawn/templates`
