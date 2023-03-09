@@ -37,8 +37,8 @@ Btw, I install Arch Linux.
 
 ![Example](install.gif)
 
-## Creating .nspawn file
-We are going to create a systemd .nspawn configuration.
+## Creating an .nspawn file
+We are going to create a systemd .nspawn configuration which we can use later by passing --machine name when creating containers.
 
 * `sudo mkdir /etc/systemd/nspawn`
 * `sudo nano /etc/systemd/nspawn/archlinux.nspawn`
@@ -63,11 +63,11 @@ BindReadOnly=/etc/resolv.conf
 BindReadOnly=/tmp/.X11-unix
 ```
 
-If you don't want the container to have the ability to manage the deck's users and groups, you should replace Bind with BindReadOnly for hosts, passwd, shadow, gshadow, group, subuid, subgid, sudoers and sudoers.d.
+If you don't want the containers to have the ability to manage the deck's users and groups, you should replace Bind with BindReadOnly for hosts, passwd, shadow, gshadow, group, subuid, subgid, sudoers and sudoers.d.
 
 If you don't need the fullest of root privileges for anything, you can remove the Capability=all
 
-We also give it /home and /mnt to share our files with the container.
+We also give it access to our /home and /mnt to easily share our files with the container.
 
 ## Creating history files
 So since we plan to share our home directory with our container, we need to make a history file for it, otherwise your command history will be shared with the container. You might be okay with that, but it might become confusing if you forget what command came from where.
