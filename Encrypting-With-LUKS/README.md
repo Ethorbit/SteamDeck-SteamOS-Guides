@@ -538,6 +538,9 @@ If you experience lots of boot errors that pass really fast and then the screen 
 	
 If you didn't experience boot errors, this can instead mean that the unencrypted home partition has run out of space before the Steam install could finish. If that's the case, you'll need to sadly re-configure everything related to disks to give the unencrypted home more space.
 	
+### reload ioctl error when decrypting
+Issue caused by update, run `sudo update-grub` and reboot.
+
 ### Unable to login to Steam
 Do it in Desktop mode. Native controls may not work fully until *after* an account has been added.
 
