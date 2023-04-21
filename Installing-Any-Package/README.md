@@ -24,7 +24,7 @@ It's a chroot on steroids that can boot different Linux operating systems. We ca
 
 Before proceeding, set a password if you haven't already. Inside the Desktop Konsole, type: `passwd` to set it.
 
-## ![warning-icon](https://i.imgur.com/ZWdfbEN.png) Warning
+## ![warning-icon](warning_icon.png) Warning
 Because the goal is to make the nspawn container tightly integrated with the host and to give it the greatest privileges so that it can run anything, you have the ability to destroy your SteamOS system from inside. You should still take care when using root and treat it as if it were on the host system. You don't have to worry about file conflicts though because we will only share /home and mounts, so feel free to install anything. Just understand that if you wanted to, you could completely wipe your shared directories with a single container root command.
 
 I'm not responsible for any damage or data loss.
@@ -179,7 +179,7 @@ Restart container and you should have a functioning docker inside, if it doesn't
 
 Now I'm inside an Alpine Linux Docker container that's inside of an Arch Linux nspawn container that's inside of SteamOS. The possibilites are endless!
 
-![meme](https://i.imgur.com/DxTfA8O.png)
+![meme](meme.png)
 
 ## Using btrfs subvolumes as OS templates (Optional)
 If you find yourself creating multiple nspawn containers, you can use btrfs subvolumes as OS templates instead of installing the same OS repeatedly. This can help save space.
