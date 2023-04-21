@@ -131,7 +131,7 @@ fi
 You'll of course need to improve this solution if you plan to run multiple nspawn containers, but as you'll see later you only really need one.
 
 ## Booting the container
-Just type your command's alias set in .bashrc: `archlinux`
+Just type your command's alias set in .bashrc: `archlinux` (if it says not found, enter `source ~/.bashrc`)
 
 You should see the systemd boot sequence in the terminal as if we were booting a real Linux OS. Now you can update it and install packages as if it were your real OS.
 
