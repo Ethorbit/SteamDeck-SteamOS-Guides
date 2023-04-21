@@ -5,9 +5,9 @@ To make this all possible: Full Disk Encryption simply can't work. We will be en
 
 If you have any other custom partitions which SteamOS does not rely on to run, you can encrypt those as well.
 
-[![Video Tutorial](video_play_button.png)](https://youtu.be/B8CV6EAB0-k)
+[![Video Tutorial](content/video_play_button.png)](https://youtu.be/B8CV6EAB0-k)
 
-# ![warning-icon](warning_icon.png) Warning
+# ![warning-icon](content/warning_icon.png) Warning
 **None of this is official**. The method used here is hacky, intended only for SteamOS and may not work in future releases. 
 
 I'm not responsible for any damage or data loss.
@@ -19,7 +19,7 @@ I'm not responsible for any damage or data loss.
 * A USB-C hub with USB ports which work in the Steam Deck, preferably with power pass-through support so that you can charge the deck as well (securely wiping disks takes a long time)
 * A USB flash drive with a Linux install(er) on it like [this](https://archlinux.org/download/), so you can access the SteamOS partitions from outside
 
-![Example](prerequisites.png)
+![Example](content/prerequisites.png)
 
 # Opening Desktop terminal
 
@@ -61,14 +61,14 @@ Before proceeding, **reboot to make sure there is text instead of a logo.**
 
 Note: *There will always be an animation that shows when the deck turns on.*
 
-[![Example](verbose_boot.png)
+[![Example](content/verbose_boot.png)
 
 # Booting into a Linux installer
 Despite its name, we are not actually going to be "installing" anything; we just need a separate temporary Linux environment to use while we manage and encrypt partitions. We are doing it this way to simply avoid any file conflicts. My flash drive has Ventoy with an Arch Linux Installer .iso on it, so I will be booting from that.
 
 With the Deck powered off and usb devices plugged in, hold the Volume Down and Power button at the same time until you hear a noise. Select the Flash drive to boot into it.
 
-[![Video Tutorial](video_play_button_2.jpg)](https://www.youtube.com/watch?v=2_Pkv4tr8Ho)
+[![Video Tutorial](content/video_play_button_2.jpg)](https://www.youtube.com/watch?v=2_Pkv4tr8Ho)
 
 
 # Partitioning
@@ -113,7 +113,7 @@ Note: *If you make a mistake in fdisk, Ctrl + C will exit without changes as lon
 * Enter w to write changes
   
 ### Home partition
-![warning-icon](warning_icon.png) We have to be careful here, because SteamOS is installed on the nvme drive!
+![warning-icon](content/warning_icon.png) We have to be careful here, because SteamOS is installed on the nvme drive!
   
 We only care about the **home** partition of the nvme drive.
 
@@ -171,7 +171,7 @@ Device            Start       End  Sectors  Size Type
 # Encrypting
 My /dev/mmcblk0p1 and /dev/nvme0n1p9 are the two partitions that need to be encrypted.
   
-![warning-icon](warning_icon.png) **Make sure you double check that the partitions you are about to encrypt are the ones YOU created**, these next actions have the potential to bork your whole SteamOS install (if passed the wrong partition(s).)
+![warning-icon](content/warning_icon.png) **Make sure you double check that the partitions you are about to encrypt are the ones YOU created**, these next actions have the potential to bork your whole SteamOS install (if passed the wrong partition(s).)
 
 Setup encryption for them:
 * `cryptsetup luksFormat /dev/nvme0n1p9`
@@ -497,7 +497,7 @@ It is time to boot back into SteamOS: `shutdown -r now`
   
 If everything worked, the screen will be black for a few minutes and then a Steam setup menu should appear.
   
-![Example](steam_install_prompt.png)
+![Example](content/steam_install_prompt.png)
 	
 ### Create a disposable Steam account
 This Steam install simply exists to decrypt the system every time you boot, you will **not** use it to play games (the unencrypted partition only has enough space for the Steam install anyway)
