@@ -332,7 +332,7 @@ nvme0n1                       57.6G             disk
  
 As you can see, the partitions we encrypted appear with the type "crypto_LUKS". Your UUIDs will be different than mine, **do not use mine.**
 
-Note: *I will be using options called `subvol=name` and `force-compress=zstd:#`, **do not include them** unless you're also using btrfs*
+Note: *I will be using options called `subvol=name` and `compress-force=zstd:#`, **do not include them** unless you're also using btrfs*
 
 ### Fstab:
 `nano /mnt/lib/overlays/etc/upper/fstab`
@@ -340,7 +340,7 @@ Note: *I will be using options called `subvol=name` and `force-compress=zstd:#`,
 Replace the existing /home line with this:
 ```bash
 # Unencrypted home
-UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /home     btrfs   defaults,force-compress=zstd:16       0       2
+UUID="f80b8cb3-0dbf-4cd9-8db4-29c78cfa3266"     /home     btrfs   defaults,compress-force=zstd:16       0       2
 ```
 	
 ### Passphrase unlock script: 
