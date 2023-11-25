@@ -479,7 +479,8 @@ This is a root-only script. You won't be decrypting the system as root, so we wi
 `echo "deck ALL=(root) NOPASSWD: /var/usr/sbin/decrypt.sh" >> /mnt/lib/overlays/etc/upper/sudoers`
 
 **If your username was changed from the default 'deck', make sure to change it there too.**
-  
+
+You can check if 1000 is the right UID with: `cat /mnt/lib/overlays/etc/upper/passwd | cut -d ":" -f 1,3` This will be useful for the next steps.
 We will want a decryption prompt as soon as we open terminal, so let's mount the unencrypted home directory and add the .bashrc:
 * `umount /mnt`
 * `mount /dev/disk/by-label/unencrypted_home /mnt`
@@ -489,7 +490,7 @@ We will want a decryption prompt as soon as we open terminal, so let's mount the
 * `echo "cd / && sudo /var/usr/sbin/decrypt.sh" > /mnt/deck/.bashrc`
 * `chown 1000:1000 /mnt/deck/.bashrc`
   
-Again, make sure to use *your* device ID and replace 'deck' if your username is different. You can check if 1000 is the right UID with: `cat /mnt/lib/overlays/etc/upper/passwd | cut -d ":" -f 1,3`
+Again, make sure to use *your* device ID and replace 'deck' if your username is different. Change `1000` to the UID you got earlier.
   
 It is time to boot back into SteamOS: `shutdown -r now`
   
