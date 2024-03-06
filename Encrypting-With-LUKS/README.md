@@ -189,12 +189,12 @@ Next we will open them:
 
 We should never use them directly as they are now encrypted. The LUKS mappings (opened) devices are located at /dev/mapper/crypt_sdcard and /dev/mapper/crypt_home.
   
-The next thing we will do is securely wipe them. **This is a process that will take a long time to complete**, especially with the slower SD card - which is why you should be charging your deck by now.
+The next thing we will do is completely optional, we are going to make it harder for attackers to know where future data is stored. To do this, all we need to do is zero-out the encrypted devices. As all writes to these devices are encrypted, every zero will also be encrypted and the devices will appear to be fully filled. **This is a process that will take a long time to complete**, especially with the slower SD card - which is why you should be charging your deck by now.
+
+![warning-icon](content/warning_icon.png) Flash storage (including SSDs and SD cards) have limited write cycles, some of which will be spent doing this! You may want to skip them.
 
 * `dd if=/dev/zero of=/dev/mapper/crypt_sdcard bs=1M status=progress`
 * `dd if=/dev/zero of=/dev/mapper/crypt_home bs=1M status=progress`
-  
-Normally, this operation would allocate the entire disk with zeroes, but since all writes to these devices are encrypted, these zeroes will also be encrypted. This makes it way harder for attackers to figure out which parts of the encrypted disks actually contain user data.
   
 # Making filesystems
 
